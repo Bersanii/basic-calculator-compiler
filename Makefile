@@ -5,7 +5,7 @@ mybc: lexer.o main.o parser.o
 	$(CC) $^ -o $@
 
 clean:
-	$(RM) *.o
+	$(RM) *.o mybc
 
 mostlyclean: clean
 	$(RM) *~
