@@ -1,2 +1,5 @@
 # basic-calculator-compiler
-Projeto para estudo de compiladores implementando uma caculadora basica
+Projeto para estudo de compiladores implementando uma caculadora basica.
+
+# Etapas Realizadas:
+
