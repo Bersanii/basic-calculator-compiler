@@ -9,11 +9,11 @@ char lexeme[MAXIDLEN + 1];
 
 /* 
 --------------------------------------------------------------------
- Identificadores em estilo Pascal
- ID = [A-Za-z][A-Za-z0-9]* 
- - Inicia com uma letra (maiúscula ou minúscula)
- - Pode conter letras e números após o primeiro caractere
- --------------------------------------------------------------------
+Identificadores em estilo Pascal
+ID = [A-Za-z][A-Za-z0-9]* 
+- Inicia com uma letra (maiúscula ou minúscula)
+- Pode conter letras e números após o primeiro caractere
+--------------------------------------------------------------------
 */
 int isID(FILE *tape)
 {
@@ -35,22 +35,16 @@ int isID(FILE *tape)
 }
 
 /*
-	DEC = [1-9][0-9]* | '0'
-							------------------------------------------
-							|                      digit               |
-							|                    --------              |
-							|                   |        |             |
-				digit      |     not zero      V        |  epsilon    V
-	-->(is DEC)--------->(is ZERO)---------->(isdigit)-------------->((DEC))
-		|
-		| epsilon
-		|
-		V
-	  ((0))
+--------------------------------------------------------------------
+Números decimais
+DEC = [1-9][0-9]* | '0'
+- Se começa com dígito != 0, aceita sequência de dígitos
+- Se começa com '0', aceita apenas '0'
+--------------------------------------------------------------------
 */
 int isDEC(FILE *tape)
 {
-	if ( isdigit(lexeme[0] = getc(tape)) ) {
+	if ( isdigit(lexeme[0] = getc(tape)) ) { // Primeiro caractere deve ser número
 		if (lexeme[0] == '0') {
 			return DEC;
 		}
@@ -69,6 +63,14 @@ int isDEC(FILE *tape)
 // fpoint = DEC \.[O-9]* | \.[0-9][0-9]*
 // flt = fpoint EE? | DEC EE
 // EE = [eE]['+''-']?[0-9][0-9]*
+/*
+--------------------------------------------------------------------
+Expoente em números de ponto flutuante
+EE = [eE]['+''-']?[0-9][0-9]*
+
+Exemplo: 1.23e+10, 5E-2
+--------------------------------------------------------------------
+*/
 int isEE(FILE *tape) {
 
 	int i = strlen(lexeme);
@@ -112,6 +114,17 @@ int isEE(FILE *tape) {
 	return 0; // nao eh exponencial
 }
 
+/*
+--------------------------------------------------------------------
+Reconhecimento de números (inteiros, float e exponenciais)
+
+Formas aceitas:
+- DEC (inteiro decimal)
+- DEC '.' [0-9]* (número com parte fracionária)
+- '.' [0-9]+ (número começando com ponto)
+- Qualquer número com sufixo EE (expoente)
+--------------------------------------------------------------------
+*/
 int isNUM(FILE *tape)
 {
 	int token = isDEC(tape);
@@ -158,7 +171,10 @@ int isNUM(FILE *tape)
 }
 
 /*
-	OCT = '0'[0-7]+
+--------------------------------------------------------------------
+Octal
+OCT = '0'[0-7]+
+--------------------------------------------------------------------
 */
 int isOCT(FILE *tape)
 {
@@ -187,6 +203,14 @@ int isOCT(FILE *tape)
 /*
 	HEX = '0'[Xx][0-9A-Fa-f]+
  	isxdigit == [0-9A-Fa-f]
+*/
+/*
+--------------------------------------------------------------------
+Hexadecimal
+HEX = '0'[Xx][0-9A-Fa-f]+
+- Começa com '0x' ou '0X'
+- Usa função isxdigit() para validar [0-9A-Fa-f]
+--------------------------------------------------------------------
 */
 int isHEX(FILE *tape)
 {
@@ -223,7 +247,14 @@ int isHEX(FILE *tape)
 	return 0;
 }
 
-// Skip spaces
+int lineno = 1;
+
+/*
+--------------------------------------------------------------------
+Função auxiliar para ignorar espaços em branco
+(espaço, tab, quebras de linha etc.)
+--------------------------------------------------------------------
+*/
 void skipspaces(FILE *tape)
 {
 	int head;
@@ -231,6 +262,14 @@ void skipspaces(FILE *tape)
 	ungetc(head, tape);
 }
 
+/*
+--------------------------------------------------------------------
+Função principal de análise léxica (scanner)
+- Ignora espaços
+- Testa ordem: Identificadores, Hexadecimal, Octal, Números
+- Caso contrário, retorna caractere ASCII isolado como token
+--------------------------------------------------------------------
+*/
 int gettoken(FILE *source)
 {
 	int token;

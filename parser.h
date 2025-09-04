@@ -4,6 +4,8 @@ extern int lookahead;
 
 extern char lexeme[];
 
+extern int lineno;
+
 extern FILE *source;
 
 void match(int expected);

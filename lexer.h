@@ -11,4 +11,6 @@ enum {
 	HEX,
 };
 
+extern int lineno;
+
 int gettoken(FILE *source);
