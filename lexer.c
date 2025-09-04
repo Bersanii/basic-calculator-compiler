@@ -4,22 +4,31 @@
 #include <string.h>
 #include <lexer.h>
 
+// Buffer global para armazenar o lexeme (token reconhecido)
 char lexeme[MAXIDLEN + 1];
 
 /* 
-	Versão extendida de identificador Pascal
-	ID = [A-Za-z][A-Za-z0-9]* 
+--------------------------------------------------------------------
+ Identificadores em estilo Pascal
+ ID = [A-Za-z][A-Za-z0-9]* 
+ - Inicia com uma letra (maiúscula ou minúscula)
+ - Pode conter letras e números após o primeiro caractere
+ --------------------------------------------------------------------
 */
 int isID(FILE *tape)
 {
-	if ( isalpha(lexeme[0] = getc(tape)) ) {
+	if ( isalpha(lexeme[0] = getc(tape)) ) { // Primeiro caractere deve ser letra
 		int i = 1;
-		while ( isalnum( lexeme[i] = getc(tape) ) ) i++;
-		ungetc(lexeme[i], tape);
+		while ( isalnum( lexeme[i] = getc(tape) ) ) i++; // Continua enquanto for alfanumérico
+		
+		// Devolve o último caractere lido que não pertence ao identificador
+		ungetc(lexeme[i], tape); 
 		lexeme[i] = 0;
+		
 		return ID;
 	}
 
+	// Não é identificador, desfaz leitura
 	ungetc(lexeme[0], tape);
 	lexeme[0] = 0;
 	return 0;

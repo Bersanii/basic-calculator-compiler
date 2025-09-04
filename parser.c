@@ -6,11 +6,27 @@
 
 int lookahead;
 // E é o símbolo inicial da gramática LL(1) de expressões simplificadas
-// E -> T R
-void E(void) { T(); R(); }
+// E -> [Ominus] T { Oplus T }
+// Oplus = ['+''-']
+// Ominus = ['+''-']
+void E(void) { 
+	if(lookahead == '-'){
+		match(lookahead);	
+	}
+	T();
+	while (lookahead == '+' || lookahead == '-') {
+		match(lookahead); T();
+	}
+}
 
-// T -> F Q
-void T(void) { F(); Q(); }
+// T -> F { Otimes F }
+// Otimes = ['*''/']
+void T(void) { 
+	F(); 
+	while (lookahead == '*' || lookahead == '/') {
+		match(lookahead); F();
+	}
+}
 
 // F -> '(' E ')' | DEC | OCT | HEX | FLT | ID
 void F(void)
@@ -29,32 +45,6 @@ void F(void)
 			match(FLT); break;
 		default:
 			match(ID);
-	}
-}
-
-// Q -> '*' F Q | '/' F Q | epsilon
-void Q(void)
-{
-	switch(lookahead) {
-		case '*':
-			match('*'); F(); Q(); break;
-		case '/':
-			match('/'); F(); Q(); break;
-		default:
-			;
-	}
-}
-
-// R -> '+' T R | '-' T R | epsilon
-void R(void)
-{
-	switch(lookahead) {
-		case '+':
-			match('+'); T(); R(); break;
-		case '-':
-			match('-'); T(); R(); break;
-		default:
-			;
 	}
 }
 
