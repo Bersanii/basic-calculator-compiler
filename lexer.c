@@ -93,7 +93,7 @@ int isEE(FILE *tape) {
 		}
 
 		// Checa se é digito
-		if (isdigit(lexeme[i] == getc(tape))) { // Somente o primeiro digito é obrigatório
+		if (isdigit(lexeme[i] = getc(tape))) { // Somente o primeiro digito é obrigatório
 			i++;
 			while( isdigit(lexeme[i] = getc(tape)) ) i++;
 			ungetc(lexeme[i], tape);
