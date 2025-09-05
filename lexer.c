@@ -57,7 +57,7 @@ int isDEC(FILE *tape)
 		// Devolve o último caractere lido que não pertence ao número
 		ungetc(lexeme[i], tape);
 		lexeme[i] = 0;
-		
+
 		return DEC;
 	}
 
@@ -141,7 +141,7 @@ int isNUM(FILE *tape)
 			i++;
 			while (isdigit(lexeme[i] == getc(tape))) i++;
 			ungetc(lexeme[i], tape);
-			lexeme[i] = 0;return 1;
+			lexeme[i] = 0;
 			token = FLT;
 		} else {
 			ungetc(lexeme[i], tape);
