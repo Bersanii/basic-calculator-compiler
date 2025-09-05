@@ -45,16 +45,23 @@ DEC = [1-9][0-9]* | '0'
 int isDEC(FILE *tape)
 {
 	if ( isdigit(lexeme[0] = getc(tape)) ) { // Primeiro caractere deve ser número
+		
+		// Caso especial '0'
 		if (lexeme[0] == '0') {
 			return DEC;
 		}
+
 		int i = 1;
-		while ( isdigit(lexeme[i] = getc(tape)) ) i++;
+		while ( isdigit(lexeme[i] = getc(tape)) ) i++; // Continua enquanto fornumérico
+		
+		// Devolve o último caractere lido que não pertence ao número
 		ungetc(lexeme[i], tape);
 		lexeme[i] = 0;
+		
 		return DEC;
 	}
 
+	// Não é Decimal, desfaz a leitura
 	ungetc(lexeme[0], tape);
 	lexeme[0] = 0;
 	return 0;
@@ -65,10 +72,8 @@ int isDEC(FILE *tape)
 // EE = [eE]['+''-']?[0-9][0-9]*
 /*
 --------------------------------------------------------------------
-Expoente em números de ponto flutuante
+Expoente em números floats
 EE = [eE]['+''-']?[0-9][0-9]*
-
-Exemplo: 1.23e+10, 5E-2
 --------------------------------------------------------------------
 */
 int isEE(FILE *tape) {
