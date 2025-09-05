@@ -80,8 +80,7 @@ int isEE(FILE *tape) {
 
 	int i = strlen(lexeme);
 
-	if((toupper(lexeme[i] = getc(tape)) == 'E')){
-
+	if ( toupper(lexeme[i] = getc(tape)) == 'E' ) {
 		i++;
 		
 		int hassign = 0;
@@ -96,8 +95,7 @@ int isEE(FILE *tape) {
 		// Checa se é digito
 		if (isdigit(lexeme[i] == getc(tape))) { // Somente o primeiro digito é obrigatório
 			i++;
-			while (isdigit(lexeme[i] == getc(tape))) i++;
-			
+			while( isdigit(lexeme[i] = getc(tape)) ) i++;
 			ungetc(lexeme[i], tape);
 			lexeme[i] = 0;
 			return FLT;
@@ -139,7 +137,7 @@ int isNUM(FILE *tape)
 		int i = strlen(lexeme); // Se tem um decimal em lexeme a analise precisa continuar após o final dele
 		if((lexeme[i] = getc(tape)) == '.') {
 			i++;
-			while (isdigit(lexeme[i] == getc(tape))) i++;
+			while ( isdigit( lexeme[i] = getc(tape) ) ) i++;
 			ungetc(lexeme[i], tape);
 			lexeme[i] = 0;
 			token = FLT;
@@ -149,10 +147,10 @@ int isNUM(FILE *tape)
 		}
 	} else {
 		if((lexeme[0] = getc(tape)) == '.') {
-			if (isdigit(lexeme[1] == getc(tape))) { // Somente o primeiro digito é obrigatório
+			if (isdigit(lexeme[1] = getc(tape))) { // Somente o primeiro digito é obrigatório
 				int i = 2;
 				token = FLT;
-				while (isdigit(lexeme[i] == getc(tape))) i++;
+				while (isdigit(lexeme[i] = getc(tape))) i++;
 			} else {
 				ungetc(lexeme[1], tape);
 				lexeme[1] = 0;
@@ -200,7 +198,7 @@ int isOCT(FILE *tape)
 		lexeme[0] = 0;
 	} else {
 		ungetc(lexeme[0], tape);
-		lexeme[0];
+		lexeme[0] = 0;
 	}
 	return 0;
 }
