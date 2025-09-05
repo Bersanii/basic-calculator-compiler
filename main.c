@@ -12,5 +12,7 @@ int main(void)
 
 	E();
 
+	printf("\n");
+
 	return 0;
 }

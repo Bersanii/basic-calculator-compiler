@@ -4,13 +4,23 @@
 #include <lexer.h>
 #include <parser.h>
 
+// /**/ ação semantica /**/
+
 int lookahead;
 // E é o símbolo inicial da gramática LL(1) de expressões simplificadas
 // E -> [Ominus] T { Oplus T }
 // Oplus = ['+''-']
 // Ominus = ['+''-']
 void E(void) { 
+
+	/**/int isNegate = 0; /**/
+	/**/int isOtimes = 0; /**/
+	/**/int isOplus = 0; /**/
+
 	if(lookahead == '+' || lookahead == '-'){
+		if (lookahead == '-') {
+			isNegate = lookahead;
+		}
 		match(lookahead);	
 	}
 
@@ -23,24 +33,62 @@ void E(void) {
 			match('('); E(); match(')');
 			break;
 		case DEC:
-			match(DEC); break;
+			/**/printf(" %s ", lexeme);/**/
+			match(DEC); 
+			break;
 		case OCT:
-			match(OCT); break;
+			/**/printf(" %s ", lexeme);/**/
+			match(OCT); 
+			break;
 		case HEX:
-			match(HEX); break;
+			/**/printf(" %s ", lexeme);/**/
+			match(HEX); 
+			break;
 		case FLT:
-			match(FLT); break;
+			/**/printf(" %s ", lexeme);/**/
+			match(FLT); 
+			break;
 		default:
+			/**/printf(" %s ", lexeme);/**/
 			match(ID);
 	}
 
+	// Término do fator
+
+	/**/
+	if(isOtimes){
+		printf(" %c ", isOtimes);
+		isOtimes = 0;
+	}
+	/**/
+
 	if (lookahead == '*' || lookahead == '/') {
+		/**/isOtimes = lookahead;/**/
 		match(lookahead); goto _Fbegin;
 	}
 
+	// Término do termo
+	
+	/**/
+	if (isNegate){
+		printf(" negate ");
+		isNegate = 0;
+	}
+	/**/
+
+	/**/
+	if(isOplus){
+		printf(" %c ", isOplus);
+		isOplus = 0;
+	}
+	/**/
+
 	if (lookahead == '+' || lookahead == '-') {
+		/**/isOplus = lookahead; /**/
 		match(lookahead); goto _Tbegin;
 	}
+
+	// Término da expressão
 }
 
 // T -> F { Otimes F }
