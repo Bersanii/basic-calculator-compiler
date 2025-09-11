@@ -39,84 +39,6 @@ int isID(FILE *tape)
 
 /*
 --------------------------------------------------------------------
-Reconhecimento de números (inteiros, float e exponenciais)
-
-Formas aceitas:
-- Inteiro decimal: DEC
-- Ponto Flutuante: DEC'.'[0-9]* | '.'[0-9]+
-- Exponencial: DEC[eE]['+''-']?[0-9][0-9]* | FLT [eE]['+''-']?[0-9][0-9]*
---------------------------------------------------------------------
-*/
-int isNUM(FILE *tape)
-{
-	int token = isDEC(tape); // Valida se é decimal
-
-	if(token == DEC)
-	{
-		int i = strlen(lexeme); // Continua a leitura considerando que já existe algo no lexeme
-		
-		// Valida se após o decimal existe um '.' (Marcador de ponto flutuante)
-		if((lexeme[i] = getc(tape)) == '.') {
-			i++;
-			token = FLT; // Atualiza o tipo para ponto flutuante
-			
-			// Continua enquanto for numérico
-			while ( isdigit( lexeme[i] = getc(tape) ) ) i++; 
-			
-			// Devolve o último caractere lido que não pertence ao número
-			ungetc(lexeme[i], tape);
-			lexeme[i] = 0;
-		} else {
-			// Devolve o último caractere lido (Mantém como decimal)
-			ungetc(lexeme[i], tape);
-			lexeme[i] = 0;
-		}
-	} else {
-		// Se não houver decimal o primeiro caractere deve ser '.' para ser um número
-		if((lexeme[0] = getc(tape)) == '.') {
-			int i = 1;
-			
-			// Primeiro caractere deve ser digito
-			if (isdigit(lexeme[i] = getc(tape))) { 
-				i++;
-				token = FLT; // Atualiza o tipo para ponto flutuante
-				
-				// Continua enquanto for numérico
-				while (isdigit(lexeme[i] = getc(tape))) i++; 
-
-				// Devolve o último caractere lido que não pertence ao número
-				ungetc(lexeme[i], tape);
-				lexeme[i] = 0;
-			} else {
-				// Não é número, desfaz leitura
-				ungetc(lexeme[i], tape);
-				lexeme[i] = 0;
-				i--;
-
-				// Devolve o '.'
-				ungetc(lexeme[i], tape);
-				lexeme[i] = 0;
-
-				return 0; // Não é um numero de ponto flutuante
-			}
-		} else {
-			// Não é número, desfaz leitura
-			ungetc(lexeme[0], tape);
-			lexeme[0] = 0;
-			return 0; // Não é um numero de ponto flutuante
-		}
-	}
-
-	// Se for DEC ou FLT ainda pode ser EE
-	if(isEE(tape)) {
-		token = FLT;
-	}
-
-	return token;
-}
-
-/*
---------------------------------------------------------------------
 Números decimais
 DEC = [1-9][0-9]* | '0'
 - Se começa com dígito != 0, aceita sequência de dígitos
@@ -203,6 +125,84 @@ int isEE(FILE *tape) {
 	ungetc(lexeme[i],tape); 
 	lexeme[i] = 0;
 	return 0;
+}
+
+/*
+--------------------------------------------------------------------
+Reconhecimento de números (inteiros, float e exponenciais)
+
+Formas aceitas:
+- Inteiro decimal: DEC
+- Ponto Flutuante: DEC'.'[0-9]* | '.'[0-9]+
+- Exponencial: DEC[eE]['+''-']?[0-9][0-9]* | FLT [eE]['+''-']?[0-9][0-9]*
+--------------------------------------------------------------------
+*/
+int isNUM(FILE *tape)
+{
+	int token = isDEC(tape); // Valida se é decimal
+
+	if(token == DEC)
+	{
+		int i = strlen(lexeme); // Continua a leitura considerando que já existe algo no lexeme
+		
+		// Valida se após o decimal existe um '.' (Marcador de ponto flutuante)
+		if((lexeme[i] = getc(tape)) == '.') {
+			i++;
+			token = FLT; // Atualiza o tipo para ponto flutuante
+			
+			// Continua enquanto for numérico
+			while ( isdigit( lexeme[i] = getc(tape) ) ) i++; 
+			
+			// Devolve o último caractere lido que não pertence ao número
+			ungetc(lexeme[i], tape);
+			lexeme[i] = 0;
+		} else {
+			// Devolve o último caractere lido (Mantém como decimal)
+			ungetc(lexeme[i], tape);
+			lexeme[i] = 0;
+		}
+	} else {
+		// Se não houver decimal o primeiro caractere deve ser '.' para ser um número
+		if((lexeme[0] = getc(tape)) == '.') {
+			int i = 1;
+			
+			// Primeiro caractere deve ser digito
+			if (isdigit(lexeme[i] = getc(tape))) { 
+				i++;
+				token = FLT; // Atualiza o tipo para ponto flutuante
+				
+				// Continua enquanto for numérico
+				while (isdigit(lexeme[i] = getc(tape))) i++; 
+
+				// Devolve o último caractere lido que não pertence ao número
+				ungetc(lexeme[i], tape);
+				lexeme[i] = 0;
+			} else {
+				// Não é número, desfaz leitura
+				ungetc(lexeme[i], tape);
+				lexeme[i] = 0;
+				i--;
+
+				// Devolve o '.'
+				ungetc(lexeme[i], tape);
+				lexeme[i] = 0;
+
+				return 0; // Não é um numero de ponto flutuante
+			}
+		} else {
+			// Não é número, desfaz leitura
+			ungetc(lexeme[0], tape);
+			lexeme[0] = 0;
+			return 0; // Não é um numero de ponto flutuante
+		}
+	}
+
+	// Se for DEC ou FLT ainda pode ser EE
+	if(isEE(tape)) {
+		token = FLT;
+	}
+
+	return token;
 }
 
 /*
@@ -304,7 +304,7 @@ int isHEX(FILE *tape)
 	// Se o primeiro caractere não for '0', desfaz leitura
 	ungetc(lexeme[0], tape);
 	lexeme[0] = 0;
-	
+
 	return 0;
 }
 
