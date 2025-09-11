@@ -17,9 +17,12 @@ ID = [A-Za-z][A-Za-z0-9]*
 */
 int isID(FILE *tape)
 {
-	if ( isalpha(lexeme[0] = getc(tape)) ) { // Primeiro caractere deve ser letra
+	// Primeiro caractere deve ser letra
+	if ( isalpha(lexeme[0] = getc(tape)) ) {
 		int i = 1;
-		while ( isalnum( lexeme[i] = getc(tape) ) ) i++; // Continua enquanto for alfanumérico
+
+		// Continua enquanto for alfanumérico
+		while ( isalnum( lexeme[i] = getc(tape) ) ) i++;
 		
 		// Devolve o último caractere lido que não pertence ao identificador
 		ungetc(lexeme[i], tape); 
@@ -36,6 +39,84 @@ int isID(FILE *tape)
 
 /*
 --------------------------------------------------------------------
+Reconhecimento de números (inteiros, float e exponenciais)
+
+Formas aceitas:
+- Inteiro decimal: DEC
+- Ponto Flutuante: DEC'.'[0-9]* | '.'[0-9]+
+- Exponencial: DEC[eE]['+''-']?[0-9][0-9]* | FLT [eE]['+''-']?[0-9][0-9]*
+--------------------------------------------------------------------
+*/
+int isNUM(FILE *tape)
+{
+	int token = isDEC(tape); // Valida se é decimal
+
+	if(token == DEC)
+	{
+		int i = strlen(lexeme); // Continua a leitura considerando que já existe algo no lexeme
+		
+		// Valida se após o decimal existe um '.' (Marcador de ponto flutuante)
+		if((lexeme[i] = getc(tape)) == '.') {
+			i++;
+			token = FLT; // Atualiza o tipo para ponto flutuante
+			
+			// Continua enquanto for numérico
+			while ( isdigit( lexeme[i] = getc(tape) ) ) i++; 
+			
+			// Devolve o último caractere lido que não pertence ao número
+			ungetc(lexeme[i], tape);
+			lexeme[i] = 0;
+		} else {
+			// Devolve o último caractere lido (Mantém como decimal)
+			ungetc(lexeme[i], tape);
+			lexeme[i] = 0;
+		}
+	} else {
+		// Se não houver decimal o primeiro caractere deve ser '.' para ser um número
+		if((lexeme[0] = getc(tape)) == '.') {
+			int i = 1;
+			
+			// Primeiro caractere deve ser digito
+			if (isdigit(lexeme[i] = getc(tape))) { 
+				i++;
+				token = FLT; // Atualiza o tipo para ponto flutuante
+				
+				// Continua enquanto for numérico
+				while (isdigit(lexeme[i] = getc(tape))) i++; 
+
+				// Devolve o último caractere lido que não pertence ao número
+				ungetc(lexeme[i], tape);
+				lexeme[i] = 0;
+			} else {
+				// Não é número, desfaz leitura
+				ungetc(lexeme[i], tape);
+				lexeme[i] = 0;
+				i--;
+
+				// Devolve o '.'
+				ungetc(lexeme[i], tape);
+				lexeme[i] = 0;
+
+				return 0; // Não é um numero de ponto flutuante
+			}
+		} else {
+			// Não é número, desfaz leitura
+			ungetc(lexeme[0], tape);
+			lexeme[0] = 0;
+			return 0; // Não é um numero de ponto flutuante
+		}
+	}
+
+	// Se for DEC ou FLT ainda pode ser EE
+	if(isEE(tape)) {
+		token = FLT;
+	}
+
+	return token;
+}
+
+/*
+--------------------------------------------------------------------
 Números decimais
 DEC = [1-9][0-9]* | '0'
 - Se começa com dígito != 0, aceita sequência de dígitos
@@ -44,15 +125,17 @@ DEC = [1-9][0-9]* | '0'
 */
 int isDEC(FILE *tape)
 {
-	if ( isdigit(lexeme[0] = getc(tape)) ) { // Primeiro caractere deve ser número
+	// Primeiro caractere deve ser número
+	if ( isdigit(lexeme[0] = getc(tape)) ) {
 		
 		// Caso especial '0'
 		if (lexeme[0] == '0') {
 			return DEC;
 		}
-
+		
 		int i = 1;
-		while ( isdigit(lexeme[i] = getc(tape)) ) i++; // Continua enquanto fornumérico
+		// Continua enquanto for numérico
+		while ( isdigit(lexeme[i] = getc(tape)) ) i++; 
 		
 		// Devolve o último caractere lido que não pertence ao número
 		ungetc(lexeme[i], tape);
@@ -67,44 +150,48 @@ int isDEC(FILE *tape)
 	return 0;
 }
 
-// fpoint = DEC \.[O-9]* | \.[0-9][0-9]*
-// flt = fpoint EE? | DEC EE
-// EE = [eE]['+''-']?[0-9][0-9]*
 /*
 --------------------------------------------------------------------
-Expoente em números floats
+Expoente
 EE = [eE]['+''-']?[0-9][0-9]*
 --------------------------------------------------------------------
 */
 int isEE(FILE *tape) {
+	
+	int i = strlen(lexeme); // Continua a leitura considerando que já existe algo no lexeme
 
-	int i = strlen(lexeme);
-
-	if ( toupper(lexeme[i] = getc(tape)) == 'E' ) {
+	// Detecta 'e' ou 'E'
+	if ( toupper(lexeme[i] = getc(tape)) == 'E' ) { 
 		i++;
 		
+		// Valida se existe o sinal, se sim ativa a flag (opcional)
 		int hassign = 0;
 		if(((lexeme[i] = getc(tape)) == '+') || (lexeme[i] == '-')) {
 			hassign = 1;
 			i++;
 		} else {
 			hassign = 0;
-			ungetc(lexeme[i], tape); // se não for um sinal devolve para ser processado a frente
+			ungetc(lexeme[i], tape); // Se não for um sinal devolve para ser processado a frente
 		}
 
-		// Checa se é digito
-		if (isdigit(lexeme[i] = getc(tape))) { // Somente o primeiro digito é obrigatório
+		if (isdigit(lexeme[i] = getc(tape))) { // Primeiro caractere deve ser número
 			i++;
-			while( isdigit(lexeme[i] = getc(tape)) ) i++;
+			
+			// Continua enquanto for numérico
+			while( isdigit(lexeme[i] = getc(tape)) ) i++; 
+			
+			// Devolve o último caractere lido que não pertence ao número
 			ungetc(lexeme[i], tape);
 			lexeme[i] = 0;
-			return FLT;
+			return FLT; // EE é considerado como ponto flutuante
 		}
 		
+		// Primeiro caractere não é um número, dezfaz a leitura
 		ungetc(lexeme[i],tape);
 		lexeme[i] = 0;
 		i--;
 
+		// Se foi detectado sinal, dezfaz a leitura do mesmo
 		if(hassign) {
 			ungetc(lexeme[i],tape);
 			lexeme[i] = 0;
@@ -112,65 +199,10 @@ int isEE(FILE *tape) {
 		}
 	}
 
+	// Não é exponencial, desfaz a leitura
 	ungetc(lexeme[i],tape); 
 	lexeme[i] = 0;
-	return 0; // nao eh exponencial
-}
-
-/*
---------------------------------------------------------------------
-Reconhecimento de números (inteiros, float e exponenciais)
-
-Formas aceitas:
-- DEC (inteiro decimal)
-- DEC '.' [0-9]* (número com parte fracionária)
-- '.' [0-9]+ (número começando com ponto)
-- Qualquer número com sufixo EE (expoente)
---------------------------------------------------------------------
-*/
-int isNUM(FILE *tape)
-{
-	int token = isDEC(tape);
-
-	if(token == DEC)
-	{
-		int i = strlen(lexeme); // Se tem um decimal em lexeme a analise precisa continuar após o final dele
-		if((lexeme[i] = getc(tape)) == '.') {
-			i++;
-			while ( isdigit( lexeme[i] = getc(tape) ) ) i++;
-			ungetc(lexeme[i], tape);
-			lexeme[i] = 0;
-			token = FLT;
-		} else {
-			ungetc(lexeme[i], tape);
-			lexeme[i] = 0;
-		}
-	} else {
-		if((lexeme[0] = getc(tape)) == '.') {
-			if (isdigit(lexeme[1] = getc(tape))) { // Somente o primeiro digito é obrigatório
-				int i = 2;
-				token = FLT;
-				while (isdigit(lexeme[i] = getc(tape))) i++;
-			} else {
-				ungetc(lexeme[1], tape);
-				lexeme[1] = 0;
-				ungetc(lexeme[0], tape);
-				lexeme[0] = 0;
-				return 0; // Não é um numero
-			}
-		} else {
-			ungetc(lexeme[0], tape);
-			lexeme[0] = 0;
-			return 0; // Não é ponto
-		}
-	}
-
-	// Se for inteiro pode vir um exponencial
-	if(isEE(tape)) {
-		token = FLT;
-	}
-
-	return token;
+	return 0;
 }
 
 /*
@@ -183,30 +215,38 @@ int isOCT(FILE *tape)
 {
 	lexeme[0] = getc(tape);
 
-	if (lexeme[0] == '0') {
+	if (lexeme[0] == '0') {  // Um número octal deve começar com '0'
 		int i = 1;
+
+		// Verifica se o próximo caractere está entre '0' e '7'
 		if ((lexeme[i] = getc(tape)) >= '0' && lexeme[i] <= '7') {
 			i++;
-			while ((lexeme[i] = getc(tape)) >= '0' && lexeme[i] <= '7') i++;
+
+			// Continua lendo enquanto for dígito válido em octal (0–7)
+			while ((lexeme[i] = getc(tape)) >= '0' && lexeme[i] <= '7') i++; 
+
+			// Devolve o caractere que não pertence ao número
 			ungetc(lexeme[i], tape);
 			lexeme[i] = 0;
-			return OCT;
+
+			return OCT; // Reconhecido como número octal
 		}
+
+		// Caso o segundo caractere não seja octal, desfaz a leitura 
 		ungetc(lexeme[i], tape);
 		lexeme[i] = 0;
+
 		ungetc('0', tape);
 		lexeme[0] = 0;
 	} else {
+		// Se não começar com '0', não é octal, desfaz leitura
 		ungetc(lexeme[0], tape);
 		lexeme[0] = 0;
 	}
-	return 0;
+
+	return 0; // Não é octal
 }
 
-/*
-	HEX = '0'[Xx][0-9A-Fa-f]+
- 	isxdigit == [0-9A-Fa-f]
-*/
 /*
 --------------------------------------------------------------------
 Hexadecimal
@@ -218,35 +258,53 @@ HEX = '0'[Xx][0-9A-Fa-f]+
 int isHEX(FILE *tape)
 {
 	lexeme[0] = getc(tape);
+
+	// Hexadecimal deve começar com '0'
 	if ( lexeme[0] == '0' ) {
 		
+		// Verifica se o próximo caractere é 'x' ou 'X'
 		if ( toupper(lexeme[1] = getc(tape)) == 'X' ) {
-			
 			int i = 2;
+
+			// O próximo caractere deve ser um dígito hexadecimal válido
 			if ( isxdigit(lexeme[i] = getc(tape)) ) {
 				i++;
+
+				// Continua lendo enquanto for dígito hexadecimal
 				while ( isxdigit(lexeme[i] = getc(tape))) i++;
+
+				// Devolve o primeiro caractere inválido
 				ungetc(lexeme[i], tape);
 				lexeme[i] = 0;
-				return HEX;
+
+				return HEX; // Reconhecido como número hexadecimal
 			}
 			
-			ungetc(lexeme[i], tape); // Devolve caractere após o x
+			// Caso não haja dígito válido após o '0x'
+			ungetc(lexeme[i], tape); // Devolve caractere inválido
 			lexeme[i] = 0;
-			ungetc(lexeme[1], tape); // Devolve caractere x
+
+			ungetc(lexeme[1], tape); // Devolve o 'x' ou 'X'
 			lexeme[1] = 0;
-			ungetc(lexeme[0], tape);  // Devolve caractere 0
+
+			ungetc(lexeme[0], tape); // Devolve o '0'
 			return 0;
 		}
 
+		// Se depois do '0' não vier 'x' ou 'X', desfaz leitura
 		ungetc(lexeme[1], tape);
 		lexeme[1] = 0;
+
 		ungetc(lexeme[0], tape);
 		lexeme[0] = 0;	
+		
 		return 0;
 	}
+
+	// Se o primeiro caractere não for '0', desfaz leitura
 	ungetc(lexeme[0], tape);
 	lexeme[0] = 0;
+	
 	return 0;
 }
 
