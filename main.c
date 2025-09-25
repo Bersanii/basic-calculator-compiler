@@ -4,11 +4,12 @@
 #include <main.h>
 #include <parser.h>
 
-FILE *source;
+FILE *source, *objcode;
 
 int main(void)
 {
 	lookahead = gettoken(source = stdin);
+	objcode = stdout;
 
 	E();
 

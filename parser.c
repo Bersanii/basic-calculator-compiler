@@ -38,23 +38,23 @@ void E(void) {
 			match('('); E(); match(')');
 			break;
 		case DEC: // Número decimal
-			/**/printf(" %s ", lexeme);/**/
+			/**/fprintf(objcode, " %s ", lexeme);/**/
 			match(DEC); 
 			break;
 		case OCT: // Número octal
-			/**/printf(" %s ", lexeme);/**/
+			/**/fprintf(objcode, " %s ", lexeme);/**/
 			match(OCT); 
 			break;
 		case HEX: // Número hexadecimal
-			/**/printf(" %s ", lexeme);/**/
+			/**/fprintf(objcode, " %s ", lexeme);/**/
 			match(HEX); 
 			break;
 		case FLT: // Número ponto flutuante
-			/**/printf(" %s ", lexeme);/**/
+			/**/fprintf(objcode, " %s ", lexeme);/**/
 			match(FLT); 
 			break;
 		default: // Identificador (variável)
-			/**/printf(" %s ", lexeme);/**/
+			/**/fprintf(objcode, " %s ", lexeme);/**/
 			match(ID);
 	}
 
@@ -62,7 +62,7 @@ void E(void) {
 
 	/**/
 	if(isOtimes){ // Se havia operador multiplicativo pendente, imprime
-		printf(" %c ", isOtimes);
+		fprintf(objcode, " %c ", isOtimes);
 		isOtimes = 0;
 	}
 	/**/
@@ -78,14 +78,14 @@ void E(void) {
 	
 	/**/
 	if (isNegate) { // Se havia sinal negativo, aplica
-		printf(" negate ");
+		fprintf(objcode, " negate ");
 		isNegate = 0;
 	}
 	/**/
 
 	/**/
 	if(isOplus) { // Se havia operador aditivo pendente, imprime
-		printf(" %c ", isOplus);
+		fprintf(objcode, " %c ", isOplus);
 		isOplus = 0;
 	}
 	/**/

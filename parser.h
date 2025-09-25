@@ -7,6 +7,7 @@ extern char lexeme[];
 extern int lineno;
 
 extern FILE *source;
+extern FILE *objcode;
 
 void match(int expected);
 
