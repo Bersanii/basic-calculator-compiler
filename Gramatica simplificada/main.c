@@ -11,9 +11,7 @@ int main(void)
 	lookahead = gettoken(source = stdin);
 	objcode = stdout;
 
-	E();
-
-	printf("\n");
+	mybc();
 
 	return 0;
 }

@@ -1,6 +1,7 @@
 #define ERRTOKEN -0x10000000
 
 extern int lookahead;
+extern double acc;
 
 extern char lexeme[];
 
@@ -13,6 +14,8 @@ void match(int expected);
 
 extern int gettoken(FILE *);
 
+void mybc(void);
+void cmd(void);
 void E(void);
 void T(void);
 void F(void);

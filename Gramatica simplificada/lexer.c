@@ -27,6 +27,13 @@ int isID(FILE *tape)
 		// Devolve o último caractere lido que não pertence ao identificador
 		ungetc(lexeme[i], tape); 
 		lexeme[i] = 0;
+
+		if(strcmp(lexeme, "exit") == 0) {
+			return EXIT;
+		}
+		if(strcmp(lexeme, "quit") == 0) {
+			return QUIT;
+		}
 		
 		return ID;
 	}
@@ -319,7 +326,12 @@ Função auxiliar para ignorar espaços em branco
 void skipspaces(FILE *tape)
 {
 	int head;
-	while ( isspace(head = getc(tape)) );
+	while ( isspace(head = getc(tape)) ){
+		if(head == '\n'){
+			lineno++;
+			break;
+		}
+	}
 	ungetc(head, tape);
 }
 

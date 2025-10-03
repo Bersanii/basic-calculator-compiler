@@ -6,9 +6,11 @@ extern char lexeme[];
 enum {
 	ID = 1024,
 	DEC,
-	FLT,
 	OCT,
 	HEX,
+	FLT,
+	EXIT,
+	QUIT
 };
 
 extern int lineno;
