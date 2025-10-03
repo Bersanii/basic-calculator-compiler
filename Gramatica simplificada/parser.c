@@ -92,13 +92,11 @@ void E(void) {
 			match(DEC); 
 			break;
 		case OCT: // Número octal
-			// /*2*/fprintf(objcode, " %s ", lexeme);/**/
-			//TODO: funcção para converter de octal
+			/*2*/ acc = strtol(lexeme, NULL, 8); /**/ 
 			match(OCT); 
 			break;
 		case HEX: // Número hexadecimal
-			// /*3*/fprintf(objcode, " %s ", lexeme);/**/
-			//TODO: funcção para converter de hexa
+			/*3*/ acc = strtol(lexeme, NULL, 16); /**/
 			match(HEX); 
 			break;
 		case FLT: // Número ponto flutuante
@@ -177,6 +175,7 @@ void match(int expected)
 		lookahead = gettoken(source);
 	} else {
 		// Caso contrário, erro de análise
+		// TODO: Melhorar a resposta de erro mostrar linha e coluna
 		fprintf(stderr, "token mismatch at line %d \n", lineno);
 		// TODO: Não retornar erro, continuar a analise
 		exit(ERRTOKEN);
