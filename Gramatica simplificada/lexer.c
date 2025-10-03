@@ -7,6 +7,8 @@
 // Buffer global para armazenar o lexeme (token reconhecido)
 char lexeme[MAXIDLEN + 1];
 
+int lineno = 1;
+int colno = 1;
 /* 
 --------------------------------------------------------------------
 Identificadores em estilo Pascal
@@ -314,8 +316,6 @@ int isHEX(FILE *tape)
 
 	return 0;
 }
-
-int lineno = 1;
 
 /*
 --------------------------------------------------------------------
