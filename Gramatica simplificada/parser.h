@@ -6,6 +6,7 @@ extern double acc;
 extern char lexeme[];
 
 extern int lineno;
+extern int colno;
 
 extern FILE *source;
 extern FILE *objcode;

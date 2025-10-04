@@ -176,7 +176,7 @@ void match(int expected)
 	} else {
 		// Caso contrário, erro de análise
 		// TODO: Melhorar a resposta de erro mostrar linha e coluna
-		fprintf(stderr, "token mismatch at line %d \n", lineno);
+		fprintf(stderr, "token mismatch at line %d column %d\n", lineno, colno);
 		// TODO: Não retornar erro, continuar a analise
 		exit(ERRTOKEN);
 	}

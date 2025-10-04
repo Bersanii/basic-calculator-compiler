@@ -8,7 +8,7 @@
 char lexeme[MAXIDLEN + 1];
 
 int lineno = 1;
-int colno = 1;
+int colno = 0; // Começa com 0 pois não foi lido nenhum caractere da coluna ainda
 /* 
 --------------------------------------------------------------------
 Identificadores em estilo Pascal
@@ -329,7 +329,7 @@ void skipspaces(FILE *tape)
 	while ( isspace(head = tracked_getc(tape)) ){
 		if(head == '\n'){
 			lineno++;
-			colno = 1;
+			colno = 0;
 			break;
 		}
 	}
