@@ -10,7 +10,7 @@ enum {
 	HEX,
 	FLT,
 	EXIT,
-	QUIT
+	QUIT,
 };
 
 extern int lineno;

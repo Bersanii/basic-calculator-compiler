@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include <lexer.h>
+#include "lexer.h"
 
 // Buffer global para armazenar o lexeme (token reconhecido)
 char lexeme[MAXIDLEN + 1];
@@ -329,6 +329,7 @@ void skipspaces(FILE *tape)
 	while ( isspace(head = getc(tape)) ){
 		if(head == '\n'){
 			lineno++;
+			colno = 1;
 			break;
 		}
 	}
@@ -359,4 +360,20 @@ int gettoken(FILE *source)
 
 	// return an ASCII token
 	return token;
+}
+
+/*
+--------------------------------------------------------------------
+Função wrapper para contar as colunas
+--------------------------------------------------------------------
+*/
+int tracked_getc(FILE *tape) {
+    int ch = getc(tape);
+    colno++;
+    return ch;
+}
+
+void tracked_ungetc(int ch, FILE *tape) {
+    ungetc(ch, tape);
+    colno--;
 }

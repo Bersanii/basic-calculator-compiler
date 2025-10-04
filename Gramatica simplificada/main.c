@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <main.h>
-#include <parser.h>
+#include "main.h"
+#include "parser.h"
 
 FILE *source, *objcode;
 
