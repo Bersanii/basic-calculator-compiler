@@ -377,3 +377,21 @@ void tracked_ungetc(int ch, FILE *tape) {
     ungetc(ch, tape);
     colno--;
 }
+
+/*
+--------------------------------------------------------------------
+Função auxiliar para converter o enum em texto para usar em logs
+--------------------------------------------------------------------
+*/
+char* getEnumName(int value) {
+    switch (value) {
+        case ID:   return "ID";
+        case DEC:  return "DEC";
+        case OCT:  return "OCT";
+        case HEX:  return "HEX";
+        case FLT:  return "FLT";
+        case EXIT: return "EXIT";
+        case QUIT: return "QUIT";
+        default:   return "";
+    }
+}

@@ -92,11 +92,11 @@ void E(void) {
 			match(DEC); 
 			break;
 		case OCT: // Número octal
-			/*2*/ acc = strtol(lexeme, NULL, 8); /**/ 
+			/*2*/acc = strtol(lexeme, NULL, 8); /**/ 
 			match(OCT); 
 			break;
 		case HEX: // Número hexadecimal
-			/*3*/ acc = strtol(lexeme, NULL, 16); /**/
+			/*3*/acc = strtol(lexeme, NULL, 16); /**/
 			match(HEX); 
 			break;
 		case FLT: // Número ponto flutuante
@@ -104,7 +104,7 @@ void E(void) {
 			match(FLT); 
 			break;
 		default: // Identificador (variável)
-			/*5*/fprintf(objcode, " %s ", lexeme);/**/
+			// /*5*/fprintf(objcode, " %s ", lexeme);/**/
 			match(ID);
 	}
 
@@ -175,8 +175,32 @@ void match(int expected)
 		lookahead = gettoken(source);
 	} else {
 		// Caso contrário, erro de análise
-		// TODO: Melhorar a resposta de erro mostrar linha e coluna
-		fprintf(stderr, "token mismatch at line %d column %d\n", lineno, colno);
+		fprintf(stderr, "Token mismatch at line %d column %d. ", lineno, colno);
+		
+		char *typename = getEnumName(expected); // Função retorna uma string com o nome do identificar caso esteja mapeado, caso contrário, retorna vazio
+		if (typename != "") {
+			fprintf(stderr, "Expected %s got ", typename);
+		} else {
+			fprintf(stderr, "Expected %d got ", expected);
+		}
+
+		switch (lookahead) {
+			case '\n': 
+				fprintf(stderr, "\\n");
+				break;
+			case '\t': 
+				fprintf(stderr, "\\t");
+				break;
+			case '\r': 
+				fprintf(stderr, "\\r");
+				break;
+			default:
+				fprintf(stderr, "%c", lookahead);
+				break;
+		}
+
+		fprintf(stderr, "\n");
+		 
 		// TODO: Não retornar erro, continuar a analise
 		exit(ERRTOKEN);
 	}

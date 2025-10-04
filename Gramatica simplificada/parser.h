@@ -13,6 +13,8 @@ extern FILE *objcode;
 
 void match(int expected);
 
+char* getEnumName(int value);
+
 extern int gettoken(FILE *);
 
 void mybc(void);
