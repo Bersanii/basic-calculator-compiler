@@ -1,5 +1,5 @@
 # GRUPO 3
-Vitor
+Vitor Bersani, Juliano dos Reis Cruz e Luan Araújo
 
 Projeto para estudo de compiladores implementando uma caculadora basica.
 
