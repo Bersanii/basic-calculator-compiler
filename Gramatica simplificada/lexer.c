@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "lexer.h"
+#include "tokens.h"
 
 // Buffer global para armazenar o lexeme (token reconhecido)
 char lexeme[MAXIDLEN + 1];
@@ -220,6 +221,7 @@ Octal
 OCT = '0'[0-7]+
 --------------------------------------------------------------------
 */
+/*
 int isOCT(FILE *tape)
 {
 	lexeme[0] = tracked_getc(tape);
@@ -255,7 +257,7 @@ int isOCT(FILE *tape)
 
 	return 0; // Não é octal
 }
-
+*/
 /*
 --------------------------------------------------------------------
 Hexadecimal
@@ -264,6 +266,7 @@ HEX = '0'[Xx][0-9A-Fa-f]+
 - Usa função isxdigit() para validar [0-9A-Fa-f]
 --------------------------------------------------------------------
 */
+/*
 int isHEX(FILE *tape)
 {
 	lexeme[0] = tracked_getc(tape);
@@ -316,7 +319,7 @@ int isHEX(FILE *tape)
 
 	return 0;
 }
-
+*/
 /*
 --------------------------------------------------------------------
 Função auxiliar para ignorar espaços em branco
@@ -336,6 +339,23 @@ void skipspaces(FILE *tape)
 	tracked_ungetc(head, tape);
 }
 
+int isASGN(FILE *tape){
+	lexeme[0] = tracked_getc(tape);
+	if (lexeme[0] == ':') {
+		lexeme[1] = tracked_getc(tape);
+		if (lexeme[1] == '=') {
+			lexeme[2] = 0;
+			return ASGN;
+		}
+		tracked_ungetc(lexeme[1], tape);
+		lexeme[1] = 0;
+	}
+	tracked_ungetc(lexeme[0], tape);
+	lexeme[0] = 0;
+	
+	return 0;
+}
+
 /*
 --------------------------------------------------------------------
 Função principal de análise léxica (scanner)
@@ -351,9 +371,10 @@ int gettoken(FILE *source)
 	skipspaces(source);
 
 	if ( (token = isID(source)) ) return token;
-	if ( (token = isHEX(source)) ) return token;
-	if ( (token = isOCT(source)) ) return token;
+	// if ( (token = isHEX(source)) ) return token;
+	// if ( (token = isOCT(source)) ) return token;
 	if ( (token = isNUM(source)) ) return token;
+	if ( (token = isASGN(source)) ) return token;
 
 	lexeme[0] = token = tracked_getc(source);
 	lexeme[1] = 0;

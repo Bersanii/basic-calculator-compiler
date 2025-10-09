@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lexer.h"
+#include "tokens.h"
 #include "parser.h"
 
 // /**/ ação semantica /**/
@@ -17,11 +18,9 @@ int lookahead; // Token atual (lookahead) usado pelo parser
 void mybc(void){
 	cmd();
 
-	while (lookahead != EOF) {
+	while (lookahead == ';' || lookahead == '\n') {
 		// cmdsep
-		if(lookahead == ';' || lookahead == '\n'){
-			match(lookahead);
-		}
+		match(lookahead);
 
 		cmd();
 	}
@@ -58,6 +57,33 @@ double acc;
 double stack[STACKSIZE];
 int sp = -1;
 
+// Tabela de símbolos como dicionário dos valores armazenados na memória virtual
+#define MAXSTENTRIES 4096
+char symtab[MAXSTENTRIES][MAXIDLEN+1];
+int symtab_next_entry = 0; // uso: strcpy(symtab[symtab_next_entry], name);
+double vmem[MAXSTENTRIES];
+
+int address;
+double recall(const char *name) {
+	// Busca bottom-up a variável chamada name
+	// Começa de -1 pois symtab_next_entry sempre aponta pro próximo item vazio da tabela
+	for(address = symtab_next_entry-1; address > -1; address--) {
+		if(strcmp(symtab[address], name) == 0) {
+			return vmem[address];
+		}
+	}
+	// VAriável ainda não existe
+	address = symtab_next_entry;
+	symtab_next_entry++;
+	strcpy(symtab[address], name);
+	return 0.e+00; // Só para enfatizar que é ponto flutuante
+}
+
+void store(const char *name) {
+	recall(name); // Vai localizar o endereço da variavel na memória
+	vmem[address] = acc;
+}
+
 // E é o símbolo inicial da gramática LL(1) de expressões simplificadas
 // Gramática:
 // E -> [Ominus] T { Oplus T }
@@ -65,9 +91,10 @@ int sp = -1;
 // Ominus = ['+''-']
 void E(void) { 
 
-	/**/int isNegate = 0; /**/		// Marca se deve aplicar negação
-	/**/int isOtimes = 0; /**/		// Armazena operador multiplicativo ('*' ou '/')
-	/**/int isOplus = 0; /**/		// Armazena operador aditivo ('+' ou '-')
+	/*0*/char varname[MAXIDLEN+1]/**/;
+	/*1*/int isNegate = 0; /**/		// Marca se deve aplicar negação
+	/*2*/int isOtimes = 0; /**/		// Armazena operador multiplicativo ('*' ou '/')
+	/*3*/int isOplus = 0; /**/		// Armazena operador aditivo ('+' ou '-')
 
 	// Trata opcional (+ ou -) antes do termo
 	if(lookahead == '+' || lookahead == '-'){
@@ -91,21 +118,29 @@ void E(void) {
 			/*1*/acc = atoi(lexeme);/**/
 			match(DEC); 
 			break;
-		case OCT: // Número octal
-			/*2*/acc = strtol(lexeme, NULL, 8); /**/ 
-			match(OCT); 
-			break;
-		case HEX: // Número hexadecimal
-			/*3*/acc = strtol(lexeme, NULL, 16); /**/
-			match(HEX); 
-			break;
+		// case OCT: // Número octal
+		// 	/*2*/acc = strtol(lexeme, NULL, 8); /**/ 
+		// 	match(OCT); 
+		// 	break;
+		// case HEX: // Número hexadecimal
+		// 	/*3*/acc = strtol(lexeme, NULL, 16); /**/
+		// 	match(HEX); 
+		// 	break;
 		case FLT: // Número ponto flutuante
 			/*4*/acc = atof(lexeme);/**/
 			match(FLT); 
 			break;
 		default: // Identificador (variável)
-			// /*5*/fprintf(objcode, " %s ", lexeme);/**/
+			// F -> ID [ := E ]
+			/**/strcpy(varname, lexeme);/**/ // Tem que salvar antes do match senão perde o nome
 			match(ID);
+			if(lookahead == ASGN) {
+				match(ASGN);
+				E(); // Traz o resultado no acumulador (acc)
+				/**/store(varname);/**/ // Armazena no endereço associado a varname
+			} else {
+				/**/acc = recall(varname);/**/
+			}
 	}
 
 	// Término do fator
