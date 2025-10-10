@@ -333,7 +333,6 @@ void skipspaces(FILE *tape)
 		if(head == '\n'){
 			lineno++;
 			colno = 0;
-			break;
 		}
 	}
 	tracked_ungetc(head, tape);

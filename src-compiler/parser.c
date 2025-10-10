@@ -9,80 +9,10 @@
 
 int lookahead; // Token atual (lookahead) usado pelo parser
 
-// Interpretador de comando
-//
-// mybc -> cmd { cmdsep cmd } EOF
-// cmd -> E | exit | quit | <epsilon>
-// cmdsep -> ';' | '\n'
-
-void mybc(void){
-	cmd();
-
-	while (lookahead == ';' || lookahead == '\n') {
-		// cmdsep
-		match(lookahead);
-
-		cmd();
-	}
-
-	match(EOF);
-}
-
-void cmd(void) {
-	switch (lookahead) {
-		case EXIT:
-		case QUIT:
-			exit(0);
-			break;
-		// First(E)
-		case '+':
-		case '-':
-		case '(':
-		case DEC:
-		case FLT:
-		case HEX:
-		case OCT:
-		case ID:
-			E();
-			printf("%lg \n", acc);
-			break;
-
-		default:
-			;
-	}
-}
-
-double acc;
-#define STACKSIZE 1024
-double stack[STACKSIZE];
-int sp = -1;
-
 // Tabela de símbolos como dicionário dos valores armazenados na memória virtual
 #define MAXSTENTRIES 4096
 char symtab[MAXSTENTRIES][MAXIDLEN+1];
 int symtab_next_entry = 0; // uso: strcpy(symtab[symtab_next_entry], name);
-double vmem[MAXSTENTRIES];
-
-int address;
-double recall(const char *name) {
-	// Busca bottom-up a variável chamada name
-	// Começa de -1 pois symtab_next_entry sempre aponta pro próximo item vazio da tabela
-	for(address = symtab_next_entry-1; address > -1; address--) {
-		if(strcmp(symtab[address], name) == 0) {
-			return vmem[address];
-		}
-	}
-	// VAriável ainda não existe
-	address = symtab_next_entry;
-	symtab_next_entry++;
-	strcpy(symtab[address], name);
-	return 0.e+00; // Só para enfatizar que é ponto flutuante
-}
-
-void store(const char *name) {
-	recall(name); // Vai localizar o endereço da variavel na memória
-	vmem[address] = acc;
-}
 
 // E é o símbolo inicial da gramática LL(1) de expressões simplificadas
 // Gramática:
@@ -115,19 +45,11 @@ void E(void) {
 			match('('); E(); match(')');
 			break;
 		case DEC: // Número decimal
-			/*1*/acc = atoi(lexeme);/**/
+			// Somente int32
+			/**/fprintf(objcode, "\tmovl %s, %%eax\n", lexeme);/**/
 			match(DEC); 
 			break;
-		// case OCT: // Número octal
-		// 	/*2*/acc = strtol(lexeme, NULL, 8); /**/ 
-		// 	match(OCT); 
-		// 	break;
-		// case HEX: // Número hexadecimal
-		// 	/*3*/acc = strtol(lexeme, NULL, 16); /**/
-		// 	match(HEX); 
-		// 	break;
 		case FLT: // Número ponto flutuante
-			/*4*/acc = atof(lexeme);/**/
 			match(FLT); 
 			break;
 		default: // Identificador (variável)
@@ -137,32 +59,33 @@ void E(void) {
 			if(lookahead == ASGN) {
 				match(ASGN);
 				E(); // Traz o resultado no acumulador (acc)
-				/**/store(varname);/**/ // Armazena no endereço associado a varname
+				/**/fprintf(objcode, "\tmovl %%eax, %s\n", varname);/**/
 			} else {
-				/**/acc = recall(varname);/**/
+				/**/fprintf(objcode, "\tmovl %%eax, %s\n", varname);/**/
 			}
 	}
 
 	// Término do fator
 
-	/**/
+	/**/ 
 	if(isOtimes){ // Se havia operador multiplicativo pendente
-		// fprintf(objcode, " %c ", isOtimes);
 		if(isOtimes == '*') {
-			stack[sp] = stack[sp] * acc;
+			fprintf(objcode, "\timull (%%esp)\n");
+			fprintf(objcode, "\taddl $4, %%esp\n");
 		} else {
-			stack[sp] = stack[sp] / acc;
+			fprintf(objcode, "\tmovl %%eax, %%ecx\n");
+			fprintf(objcode, "\tpopl %%eax\n");
+			fprintf(objcode, "\tcltq\n");
+			fprintf(objcode, "\tidivl %%ecx\n");
 		}
-		acc = stack[sp]; sp--;
-
 		isOtimes = 0;
 	}
 	/**/
-
+	
 	// Se próximo token for '*' ou '/', continua reconhecendo fator
 	if (lookahead == '*' || lookahead == '/') {
 		/*10*/isOtimes = lookahead;/**/ // Guarda operador multiplicativo
-		/*10a*/stack[++sp] = acc;/**/
+		fprintf(objcode, "\tpushl %%eax\n");
 		match(lookahead); 
 		goto _Fbegin; // Volta para reconhecer novo fator
 	}
@@ -170,30 +93,30 @@ void E(void) {
 	// Término do termo
 	
 	/**/
-	if (isNegate) { // Se havia sinal negativo, aplica
-		// fprintf(objcode, " negate ");
-		acc = -acc;
-		isNegate = 0;
-	}
+	// if (isNegate) { // Se havia sinal negativo, aplica
+	// 	// fprintf(objcode, " negate ");
+	// 	acc = -acc;
+	// 	isNegate = 0;
+	// }
 	/**/
 
 	/**/
-	if(isOplus) { // Se havia operador aditivo pendente
-		// fprintf(objcode, " %c ", isOplus);
-		if(isOplus == '+') {
-			stack[sp] = stack[sp] + acc;
-		} else {
-			stack[sp] = stack[sp] - acc;
-		}
-		acc = stack[sp]; sp--;
-		isOplus = 0;
-	}
+	// if(isOplus) { // Se havia operador aditivo pendente
+	// 	// fprintf(objcode, " %c ", isOplus);
+	// 	if(isOplus == '+') {
+	// 		stack[sp] = stack[sp] + acc;
+	// 	} else {
+	// 		stack[sp] = stack[sp] - acc;
+	// 	}
+	// 	acc = stack[sp]; sp--;
+	// 	isOplus = 0;
+	// }
 	/**/
 
 	// Se próximo token for '+' ou '-', continua reconhecendo termo
 	if (lookahead == '+' || lookahead == '-') {
-		/**/isOplus = lookahead; /**/ // Guarda operador aditivo
-		/*10a*/stack[++sp] = acc;/**/
+		// /**/isOplus = lookahead; /**/ // Guarda operador aditivo
+		// /*10a*/stack[++sp] = acc;/**/
 		match(lookahead); 
 		goto _Tbegin; // Volta para reconhecer novo termo
 	}
