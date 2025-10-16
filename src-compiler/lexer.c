@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "lexer.h"
+#include "keywords.h"
 #include "tokens.h"
 
 // Buffer global para armazenar o lexeme (token reconhecido)
@@ -31,12 +32,9 @@ int isID(FILE *tape)
 		tracked_ungetc(lexeme[i], tape); 
 		lexeme[i] = 0;
 
-		if(strcmp(lexeme, "exit") == 0) {
-			return EXIT;
-		}
-		if(strcmp(lexeme, "quit") == 0) {
-			return QUIT;
-		}
+		// Verifica se é palavra-chave
+		int token = isKeyword(lexeme);
+		if(token) return token;
 		
 		return ID;
 	}

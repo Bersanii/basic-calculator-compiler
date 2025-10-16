@@ -3,6 +3,7 @@
 #include <string.h>
 #include "lexer.h"
 #include "tokens.h"
+#include "keywords.h"
 #include "parser.h"
 
 // /**/ ação semantica /**/
@@ -106,7 +107,7 @@ void E(void) {
 		} else {
 			fprintf(objcode, "\tsubl %%eax, (%%esp)\n");
 		}
-		fprintf(objcode, "\taddl $4, %%esp\n");
+		fprintf(objcode, "\tpopl %%eax\n");
 
 		isOplus = 0;
 	}

@@ -1,0 +1,15 @@
+enum {
+    BEGIN,
+    IF,
+    THEN,
+    ELSE,
+    REPEAT,
+    UNTIL,
+    WHILE,
+    DO,
+    OR,
+    DIV,
+    MOD,
+    AND,
+    END,
+};

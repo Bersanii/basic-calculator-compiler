@@ -1,11 +1,11 @@
 HDIR = .
 CFLAGS = -g -I$(HDIR)
 
-mybc: lexer.o main.o parser.o
+mypas: lexer.o main.o parser.o keywords.o symtab.o
 	$(CC) $^ -o $@
 
 clean:
-	$(RM) *.o mybc
+	$(RM) *.o mypas
 
 mostlyclean: clean
 	$(RM) *~
