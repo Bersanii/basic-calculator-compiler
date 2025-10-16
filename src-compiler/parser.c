@@ -46,7 +46,7 @@ void E(void) {
 			break;
 		case DEC: // Número decimal
 			// Somente int32
-			/**/fprintf(objcode, "\tmovl %s, %%eax\n", lexeme);/**/
+			/**/fprintf(objcode, "\tmovl $%s, %%eax\n", lexeme);/**/
 			match(DEC); 
 			break;
 		case FLT: // Número ponto flutuante
@@ -93,30 +93,29 @@ void E(void) {
 	// Término do termo
 	
 	/**/
-	// if (isNegate) { // Se havia sinal negativo, aplica
-	// 	// fprintf(objcode, " negate ");
-	// 	acc = -acc;
-	// 	isNegate = 0;
-	// }
+	if (isNegate) { // Se havia sinal negativo, aplica
+		fprintf(objcode, "\tnegl %%eax\n");
+		isNegate = 0;
+	}
 	/**/
 
 	/**/
-	// if(isOplus) { // Se havia operador aditivo pendente
-	// 	// fprintf(objcode, " %c ", isOplus);
-	// 	if(isOplus == '+') {
-	// 		stack[sp] = stack[sp] + acc;
-	// 	} else {
-	// 		stack[sp] = stack[sp] - acc;
-	// 	}
-	// 	acc = stack[sp]; sp--;
-	// 	isOplus = 0;
-	// }
+	if(isOplus) { // Se havia operador aditivo pendente
+		if(isOplus == '+') {
+			fprintf(objcode, "\taddl %%eax, (%%esp)\n");
+		} else {
+			fprintf(objcode, "\tsubl %%eax, (%%esp)\n");
+		}
+		fprintf(objcode, "\taddl $4, %%esp\n");
+
+		isOplus = 0;
+	}
 	/**/
 
 	// Se próximo token for '+' ou '-', continua reconhecendo termo
 	if (lookahead == '+' || lookahead == '-') {
-		// /**/isOplus = lookahead; /**/ // Guarda operador aditivo
-		// /*10a*/stack[++sp] = acc;/**/
+		/**/isOplus = lookahead; /**/ // Guarda operador aditivo
+		/**/fprintf(objcode, "\tpushl %%eax\n");/**/
 		match(lookahead); 
 		goto _Tbegin; // Volta para reconhecer novo termo
 	}
