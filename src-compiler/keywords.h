@@ -1,5 +1,7 @@
+#pragma once
+
 enum {
-    BEGIN,
+    BEGIN = 0x10000000,
     IF,
     THEN,
     ELSE,
@@ -11,5 +13,9 @@ enum {
     DIV,
     MOD,
     AND,
+	TRUE,
+	FALSE,
     END,
 };
+
+extern int isKeyword(const char*);

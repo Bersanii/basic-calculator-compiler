@@ -215,111 +215,6 @@ int isNUM(FILE *tape)
 
 /*
 --------------------------------------------------------------------
-Octal
-OCT = '0'[0-7]+
---------------------------------------------------------------------
-*/
-/*
-int isOCT(FILE *tape)
-{
-	lexeme[0] = tracked_getc(tape);
-
-	if (lexeme[0] == '0') {  // Um número octal deve começar com '0'
-		int i = 1;
-
-		// Verifica se o próximo caractere está entre '0' e '7'
-		if ((lexeme[i] = tracked_getc(tape)) >= '0' && lexeme[i] <= '7') {
-			i++;
-
-			// Continua lendo enquanto for dígito válido em octal (0–7)
-			while ((lexeme[i] = tracked_getc(tape)) >= '0' && lexeme[i] <= '7') i++; 
-
-			// Devolve o caractere que não pertence ao número
-			tracked_ungetc(lexeme[i], tape);
-			lexeme[i] = 0;
-
-			return OCT; // Reconhecido como número octal
-		}
-
-		// Caso o segundo caractere não seja octal, desfaz a leitura 
-		tracked_ungetc(lexeme[i], tape);
-		lexeme[i] = 0;
-
-		tracked_ungetc('0', tape);
-		lexeme[0] = 0;
-	} else {
-		// Se não começar com '0', não é octal, desfaz leitura
-		tracked_ungetc(lexeme[0], tape);
-		lexeme[0] = 0;
-	}
-
-	return 0; // Não é octal
-}
-*/
-/*
---------------------------------------------------------------------
-Hexadecimal
-HEX = '0'[Xx][0-9A-Fa-f]+
-- Começa com '0x' ou '0X'
-- Usa função isxdigit() para validar [0-9A-Fa-f]
---------------------------------------------------------------------
-*/
-/*
-int isHEX(FILE *tape)
-{
-	lexeme[0] = tracked_getc(tape);
-
-	// Hexadecimal deve começar com '0'
-	if ( lexeme[0] == '0' ) {
-		
-		// Verifica se o próximo caractere é 'x' ou 'X'
-		if ( toupper(lexeme[1] = tracked_getc(tape)) == 'X' ) {
-			int i = 2;
-
-			// O próximo caractere deve ser um dígito hexadecimal válido
-			if ( isxdigit(lexeme[i] = tracked_getc(tape)) ) {
-				i++;
-
-				// Continua lendo enquanto for dígito hexadecimal
-				while ( isxdigit(lexeme[i] = tracked_getc(tape))) i++;
-
-				// Devolve o primeiro caractere inválido
-				tracked_ungetc(lexeme[i], tape);
-				lexeme[i] = 0;
-
-				return HEX; // Reconhecido como número hexadecimal
-			}
-			
-			// Caso não haja dígito válido após o '0x'
-			tracked_ungetc(lexeme[i], tape); // Devolve caractere inválido
-			lexeme[i] = 0;
-
-			tracked_ungetc(lexeme[1], tape); // Devolve o 'x' ou 'X'
-			lexeme[1] = 0;
-
-			tracked_ungetc(lexeme[0], tape); // Devolve o '0'
-			return 0;
-		}
-
-		// Se depois do '0' não vier 'x' ou 'X', desfaz leitura
-		tracked_ungetc(lexeme[1], tape);
-		lexeme[1] = 0;
-
-		tracked_ungetc(lexeme[0], tape);
-		lexeme[0] = 0;	
-		
-		return 0;
-	}
-
-	// Se o primeiro caractere não for '0', desfaz leitura
-	tracked_ungetc(lexeme[0], tape);
-	lexeme[0] = 0;
-
-	return 0;
-}
-*/
-/*
---------------------------------------------------------------------
 Função auxiliar para ignorar espaços em branco
 (espaço, tab, quebras de linha etc.)
 --------------------------------------------------------------------
@@ -353,6 +248,32 @@ int isASGN(FILE *tape){
 	return 0;
 }
 
+int isREL(FILE *tape) {
+	lexeme[0] = tracked_getc(tape);
+	lexeme[1] = tracked_getc(tape);
+	lexeme[2] = 0;
+
+	if (lexeme[0] == '<') {
+		if(lexeme[1] == '='){
+			return LEQ;
+		}
+		if(lexeme[1] == '>'){
+			return NEQ;
+		}
+	}
+
+	if (lexeme[0] == '>' && lexeme[1] == '=') {
+		return GEQ;
+	}
+	
+	tracked_ungetc(lexeme[1], tape);
+	lexeme[1] = 0;
+	tracked_ungetc(lexeme[0], tape);
+	lexeme[0] = 0;
+	
+	return 0;
+}
+
 /*
 --------------------------------------------------------------------
 Função principal de análise léxica (scanner)
@@ -368,10 +289,9 @@ int gettoken(FILE *source)
 	skipspaces(source);
 
 	if ( (token = isID(source)) ) return token;
-	// if ( (token = isHEX(source)) ) return token;
-	// if ( (token = isOCT(source)) ) return token;
 	if ( (token = isNUM(source)) ) return token;
 	if ( (token = isASGN(source)) ) return token;
+	if ( (token = isREL(source)) ) return token;
 
 	lexeme[0] = token = tracked_getc(source);
 	lexeme[1] = 0;
@@ -405,11 +325,11 @@ char* getEnumName(int value) {
     switch (value) {
         case ID:   return "ID";
         case DEC:  return "DEC";
-        case OCT:  return "OCT";
-        case HEX:  return "HEX";
+        //case OCT:  return "OCT";
+        //case HEX:  return "HEX";
         case FLT:  return "FLT";
-        case EXIT: return "EXIT";
-        case QUIT: return "QUIT";
+        //case EXIT: return "EXIT";
+        //case QUIT: return "QUIT";
         default:   return "";
     }
 }

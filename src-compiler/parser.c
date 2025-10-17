@@ -15,12 +15,34 @@ int lookahead; // Token atual (lookahead) usado pelo parser
 char symtab[MAXSTENTRIES][MAXIDLEN+1];
 int symtab_next_entry = 0; // uso: strcpy(symtab[symtab_next_entry], name);
 
-// E é o símbolo inicial da gramática LL(1) de expressões simplificadas
-// Gramática:
-// E -> [Ominus] T { Oplus T }
+void stmt(void) {
+
+}
+
+int isRelOp(void) {
+	switch (lookahead) {
+		case '<':
+		case LEQ:
+		case NEQ:
+		case '>':
+		case GEQ:
+			return lookahead;
+	}
+	return 0;
+}
+
+void exp(void) {
+	simpleExp();
+	if (isRelOp()) {
+		match(lookahead);
+		simpleExp();
+	}
+	
+}
+
 // Oplus = ['+''-']
 // Ominus = ['+''-']
-void E(void) { 
+void simpleExp(void) { 
 
 	/*0*/char varname[MAXIDLEN+1]/**/;
 	/*1*/int isNegate = 0; /**/		// Marca se deve aplicar negação
@@ -43,7 +65,7 @@ void E(void) {
 
 	switch(lookahead) {
 		case '(': // Expressão entre parênteses
-			match('('); E(); match(')');
+			match('('); exp(); match(')');
 			break;
 		case DEC: // Número decimal
 			// Somente int32
@@ -59,7 +81,7 @@ void E(void) {
 			match(ID);
 			if(lookahead == ASGN) {
 				match(ASGN);
-				E(); // Traz o resultado no acumulador (acc)
+				exp(); // Traz o resultado no acumulador (acc)
 				/**/fprintf(objcode, "\tmovl %%eax, %s\n", varname);/**/
 			} else {
 				/**/fprintf(objcode, "\tmovl %%eax, %s\n", varname);/**/

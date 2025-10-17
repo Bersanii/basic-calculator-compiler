@@ -1,5 +1,5 @@
-HDIR = .
-CFLAGS = -g -I$(HDIR)
+WDIR = .
+CFLAGS = -g -I$(WDIR)
 
 mypas: lexer.o main.o parser.o keywords.o symtab.o
 	$(CC) $^ -o $@

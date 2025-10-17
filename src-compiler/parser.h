@@ -17,8 +17,7 @@ char* getEnumName(int value);
 
 extern int gettoken(FILE *);
 
-void E(void);
+void exp(void);
+void simpleExp(void);
 void T(void);
 void F(void);
-void Q(void);
-void R(void);

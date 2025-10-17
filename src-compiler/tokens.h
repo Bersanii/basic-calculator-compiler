@@ -3,7 +3,7 @@ enum {
 	DEC,
 	FLT,
     ASGN,
-	LEQ,
-	GEQ,
-	NEQ
+	LEQ, // <=
+	GEQ, // >=
+	NEQ, // <>
 };
