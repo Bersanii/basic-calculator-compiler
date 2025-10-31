@@ -222,12 +222,24 @@ Função auxiliar para ignorar espaços em branco
 void skipspaces(FILE *tape)
 {
 	int head;
+	_skipspaces_head:
 	while ( isspace(head = tracked_getc(tape)) ){
 		if(head == '\n'){
 			lineno++;
 			colno = 0;
 		}
 	}
+	if (head == '{') {
+        while ((head = tracked_getc(tape)) != '}')
+        {
+            if (head == '\n') {
+				lineno++;
+				colno = 0;
+			}
+        }
+
+        goto _skipspaces_head;
+    }
 	tracked_ungetc(head, tape);
 }
 
@@ -325,11 +337,29 @@ char* getEnumName(int value) {
     switch (value) {
         case ID:   return "ID";
         case DEC:  return "DEC";
-        //case OCT:  return "OCT";
-        //case HEX:  return "HEX";
         case FLT:  return "FLT";
-        //case EXIT: return "EXIT";
-        //case QUIT: return "QUIT";
+		case BEGIN: return "BEGIN";
+		case PROGRAM: return "PROGRAM";
+		case PROCEDURE: return "PROCEDURE";
+		case FUNCTION: return "FUNCTION";
+		case INTEGER: return "INTEGER";
+		case REAL: return "REAL";
+		case BOOLEAN: return "BOOLEAN";
+		case VAR: return "VAR";
+		case IF: return "IF";
+		case THEN: return "THEN";
+		case ELSE: return "ELSE";
+		case REPEAT: return "REPEAT";
+		case UNTIL: return "UNTIL";
+		case WHILE: return "WHILE";
+		case DO: return "DO";
+		case OR: return "OR";
+		case DIV: return "DIV";
+		case MOD: return "MOD";
+		case AND: return "AND";
+		case TRUE: return "TRUE";
+		case FALSE: return "FALSE";
+		case END: return "END";
         default:   return "";
     }
 }

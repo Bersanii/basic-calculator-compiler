@@ -2,10 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug mybc",
+      "name": "Debug compiler",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/mybc",
+      "program": "${workspaceFolder}/src-compiler",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",

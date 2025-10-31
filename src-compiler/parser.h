@@ -17,7 +17,20 @@ char* getEnumName(int value);
 
 extern int gettoken(FILE *);
 
-void exp(void);
+void program(void);
+void expression(void);
 void simpleExp(void);
-void T(void);
-void F(void);
+void idlist(void);
+void block(void);
+void varDeclaration(void);
+void type(void);
+void sbProgram(void);
+void parmList(void);
+void beginEnd(void);
+void stmtList(void);
+void stmt(void);
+void idStmt(void);
+void ifStmt(void);
+void whileStmt(void);
+void repStmt(void);
+void argList(void);

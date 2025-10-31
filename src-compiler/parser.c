@@ -15,8 +15,191 @@ int lookahead; // Token atual (lookahead) usado pelo parser
 char symtab[MAXSTENTRIES][MAXIDLEN+1];
 int symtab_next_entry = 0; // uso: strcpy(symtab[symtab_next_entry], name);
 
-void stmt(void) {
+// program -> PROGRAM ID '(' idlist ')' ';' block '.'
+void program(void) {
+	match(PROGRAM);
+	match(ID);
+	match('(');
+	idlist();
+	match(')');
+	match(';');
+	block();
+	match('.');
+}
 
+// idlist -> ID { ',' ID }
+void idlist(void) {
+	match(ID);
+	while (lookahead == ',') {
+		match(',');
+		match(ID);
+	}
+}
+// void idlist(void) {
+// 	_idHead:
+// 	match(ID);
+// 	if (lookahead == ',') {
+// 		match(',');
+// 		goto _idHead;
+// 	}
+// }
+
+// block -> varDeclaration
+// 			sbProgram
+//			beginEnd
+void block(void) {
+	varDeclaration();
+	sbProgram();
+	beginEnd();
+}
+
+// varDeclaration -> { VAR idlist ':' type ';' { idlist ':' type ';' } }
+void varDeclaration(void) {
+	if (lookahead == VAR) {
+		match(VAR);
+		_idList_head:
+		idlist();
+		match(':');
+		type();
+		match(';');
+		if(lookahead == ID) {
+			goto _idList_head;
+		}
+	}
+}
+
+// type -> INTEGER | REAL | BOOLEAN
+void type(void) {
+	switch (lookahead) {
+		case INTEGER:
+		case REAL:
+			match(lookahead);
+			break;
+		default:
+			match(BOOLEAN);
+			break;
+    }
+}
+
+// sbProgram -> { PROCEDURE ID parmList ';' block ';' | FUNCTION ID parmList ':' type block ';' }
+void sbProgram(void) {
+	while (lookahead == PROCEDURE || lookahead == FUNCTION) {
+		if(lookahead == PROCEDURE) {
+			match(PROCEDURE);
+			match(ID);
+			parmList();
+			match(';');
+			block();
+			match(';');
+		} else {
+			match(FUNCTION);
+			match(ID);
+			parmList();
+			match(':');
+			type();
+			match(';');
+			block();
+			match(';');
+		}
+	}
+}
+
+// parmList -> '{' { VAR } idlist ':' type { ';' } '}' 
+void parmList(void) {
+	if (lookahead == '{') {
+		match('{');
+		_parmList_head:
+		if (lookahead == VAR) {
+			match(VAR);
+		}
+		idlist();
+		match(':');
+		type();
+		if(lookahead == ';') {
+			match(';');
+			goto _parmList_head;
+		}
+		match('}');
+	}
+}
+
+// beginEnd -> BEGIN stmtList END
+void beginEnd(void) {
+	match(BEGIN);
+	stmtList();
+	match(END);
+}
+
+// TODO: gramatica
+void stmtList(void) {
+	_stmtList_head:
+	stmt();
+	if(lookahead == ';') {
+		match(';');
+		goto _stmtList_head;
+	}
+}
+
+// TODO: gramatica
+void stmt(void) {
+	switch (lookahead) {
+		case ID: // Pode ser variavel funcção ou procedure
+			idStmt();
+			break;
+		case BEGIN:
+			beginEnd();
+			break;
+		case IF:
+			ifStmt();
+		case WHILE:
+			whileStmt();
+		case REPEAT:
+			repStmt();
+		default: // Empty statement
+			break;
+	}
+}
+
+// TODO: gramatica
+void idStmt(void) {
+	match(ID);
+	argList();
+}
+
+// TODO: gramatica
+void argList(void) {
+	if(lookahead == '(') {
+		match('(');
+		_exprList_head:
+		expression();
+		if(lookahead == ',') {
+			match(',');
+			goto _exprList_head;
+		}
+		match(')');
+	}
+}
+
+// TODO: gramatica
+void ifStmt(void) {
+	match(IF);
+	expression();
+	match(THEN);
+	stmt();
+	if (lookahead == ELSE) {
+		match(ELSE);
+		stmt();
+	}
+}
+
+// TODO: gramatica
+void whileStmt(void) {
+	// TODO
+}
+
+// TODO: gramatica
+void repStmt(void) {
+	// TODO
 }
 
 int isRelOp(void) {
@@ -31,7 +214,7 @@ int isRelOp(void) {
 	return 0;
 }
 
-void exp(void) {
+void expression(void) {
 	simpleExp();
 	if (isRelOp()) {
 		match(lookahead);
@@ -65,7 +248,7 @@ void simpleExp(void) {
 
 	switch(lookahead) {
 		case '(': // Expressão entre parênteses
-			match('('); exp(); match(')');
+			match('('); expression(); match(')');
 			break;
 		case DEC: // Número decimal
 			// Somente int32
@@ -81,7 +264,7 @@ void simpleExp(void) {
 			match(ID);
 			if(lookahead == ASGN) {
 				match(ASGN);
-				exp(); // Traz o resultado no acumulador (acc)
+				expression(); // Traz o resultado no acumulador (acc)
 				/**/fprintf(objcode, "\tmovl %%eax, %s\n", varname);/**/
 			} else {
 				/**/fprintf(objcode, "\tmovl %%eax, %s\n", varname);/**/

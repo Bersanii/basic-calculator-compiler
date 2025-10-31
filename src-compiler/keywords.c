@@ -3,6 +3,13 @@
 
 char *keywords[] = {
     "begin",
+    "program",
+    "procedure",
+    "function",
+    "integer",
+    "real",
+    "boolean",
+    "var",
     "if",
     "then",
     "else",
