@@ -163,11 +163,16 @@ void stmt(void) {
 // TODO: gramatica
 void idStmt(void) {
 	match(ID);
-	argList();
+	if (lookahead == ASGN) {
+        match(ASGN);
+        expression();
+    } else {
+        expressionList();
+    }
 }
 
 // TODO: gramatica
-void argList(void) {
+void expressionList(void) {
 	if(lookahead == '(') {
 		match('(');
 		_exprList_head:
@@ -340,9 +345,9 @@ void match(int expected)
 		// Caso contrário, erro de análise
 		fprintf(stderr, "Token mismatch at line %d column %d. ", lineno, colno);
 		
-		char *typename = getEnumName(expected); // Função retorna uma string com o nome do identificar caso esteja mapeado, caso contrário, retorna vazio
-		if (typename != "") {
-			fprintf(stderr, "Expected %s got ", typename);
+		char *typename_expected = getEnumName(expected); // Função retorna uma string com o nome do identificar caso esteja mapeado, caso contrário, retorna vazio
+		if (typename_expected != "") {
+			fprintf(stderr, "Expected %s got ", typename_expected);
 		} else {
 			fprintf(stderr, "Expected %d got ", expected);
 		}
@@ -358,7 +363,12 @@ void match(int expected)
 				fprintf(stderr, "\\r");
 				break;
 			default:
-				fprintf(stderr, "%c", lookahead);
+				char *typename_lookahead = getEnumName(lookahead); // Função retorna uma string com o nome do identificar caso esteja mapeado, caso contrário, retorna vazio
+				if (typename_lookahead != "") {
+					fprintf(stderr, "%s", typename_lookahead);
+				} else {
+					fprintf(stderr, "%c", lookahead);
+				}
 				break;
 		}
 
