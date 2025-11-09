@@ -19,9 +19,14 @@ void mybc(void){
 	cmd();
 
 	while (lookahead == ';' || lookahead == '\n') {
+		// Controle de linhas para print de erro
+		if(lookahead == '\n')
+			lineno++;
+		colno = 0;
+		
 		// cmdsep
 		match(lookahead);
-
+		
 		cmd();
 	}
 
@@ -86,7 +91,7 @@ void store(const char *name) {
 
 // E é o símbolo inicial da gramática LL(1) de expressões simplificadas
 // Gramática:
-// E -> [Ominus] T { Oplus T }
+// E -> [Ominus] T { Oplus T }4: ainda no tratamento de erro no match, resolver o problema do exit para não quebrar a execução do ineterpretador de comando;
 // Oplus = ['+''-']
 // Ominus = ['+''-']
 void E(void) { 
@@ -118,14 +123,14 @@ void E(void) {
 			/*1*/acc = atoi(lexeme);/**/
 			match(DEC); 
 			break;
-		// case OCT: // Número octal
-		// 	/*2*/acc = strtol(lexeme, NULL, 8); /**/ 
-		// 	match(OCT); 
-		// 	break;
-		// case HEX: // Número hexadecimal
-		// 	/*3*/acc = strtol(lexeme, NULL, 16); /**/
-		// 	match(HEX); 
-		// 	break;
+		case OCT: // Número octal
+			/*2*/acc = strtol(lexeme, NULL, 8); /**/ 
+			match(OCT); 
+			break;
+		case HEX: // Número hexadecimal
+			/*3*/acc = strtol(lexeme, NULL, 16); /**/
+			match(HEX); 
+			break;
 		case FLT: // Número ponto flutuante
 			/*4*/acc = atof(lexeme);/**/
 			match(FLT); 
@@ -211,32 +216,41 @@ void match(int expected)
 	} else {
 		// Caso contrário, erro de análise
 		fprintf(stderr, "Token mismatch at line %d column %d. ", lineno, colno);
+
+		fprintf(stderr, "Expected ");
 		
 		char *typename = getEnumName(expected); // Função retorna uma string com o nome do identificar caso esteja mapeado, caso contrário, retorna vazio
-		if (typename != "") {
-			fprintf(stderr, "Expected %s got ", typename);
+		if (strcmp(typename, "") != 0) {
+			fprintf(stderr, "%s", typename);
 		} else {
-			fprintf(stderr, "Expected %d got ", expected);
+			fprintf(stderr, "'%c'", expected);
 		}
+
+		fprintf(stderr, " got ");
 
 		switch (lookahead) {
 			case '\n': 
-				fprintf(stderr, "\\n");
+				fprintf(stderr, "'\\n'");
 				break;
 			case '\t': 
-				fprintf(stderr, "\\t");
+				fprintf(stderr, "'\\t'");
 				break;
 			case '\r': 
-				fprintf(stderr, "\\r");
+				fprintf(stderr, "'\\r'");
+				break;
+			case 27: 
+				fprintf(stderr, "ESCAPE");
 				break;
 			default:
-				fprintf(stderr, "%c", lookahead);
+				char *typename_lookahead = getEnumName(lookahead); // Função retorna uma string com o nome do identificar caso esteja mapeado, caso contrário, retorna vazio
+				if (strcmp(typename_lookahead, "") != 0) {
+					fprintf(stderr, "%s", typename_lookahead);
+				} else {
+					fprintf(stderr, "'%c'", lookahead);
+				}
 				break;
 		}
 
 		fprintf(stderr, "\n");
-		 
-		// TODO: Não retornar erro, continuar a analise
-		exit(ERRTOKEN);
 	}
 }

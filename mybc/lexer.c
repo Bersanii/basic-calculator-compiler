@@ -9,7 +9,8 @@
 char lexeme[MAXIDLEN + 1];
 
 int lineno = 1;
-int colno = 0; // Começa com 0 pois não foi lido nenhum caractere da coluna ainda
+int colno = 0; // Começa com 0 pois não foi lido nenhum caractere do arquivo ainda
+
 /* 
 --------------------------------------------------------------------
 Identificadores em estilo Pascal
@@ -31,6 +32,7 @@ int isID(FILE *tape)
 		tracked_ungetc(lexeme[i], tape); 
 		lexeme[i] = 0;
 
+		// Checa alguns casos específicos
 		if(strcmp(lexeme, "exit") == 0) {
 			return EXIT;
 		}
@@ -221,7 +223,6 @@ Octal
 OCT = '0'[0-7]+
 --------------------------------------------------------------------
 */
-/*
 int isOCT(FILE *tape)
 {
 	lexeme[0] = tracked_getc(tape);
@@ -257,7 +258,7 @@ int isOCT(FILE *tape)
 
 	return 0; // Não é octal
 }
-*/
+
 /*
 --------------------------------------------------------------------
 Hexadecimal
@@ -266,7 +267,6 @@ HEX = '0'[Xx][0-9A-Fa-f]+
 - Usa função isxdigit() para validar [0-9A-Fa-f]
 --------------------------------------------------------------------
 */
-/*
 int isHEX(FILE *tape)
 {
 	lexeme[0] = tracked_getc(tape);
@@ -319,26 +319,13 @@ int isHEX(FILE *tape)
 
 	return 0;
 }
-*/
+
 /*
 --------------------------------------------------------------------
-Função auxiliar para ignorar espaços em branco
-(espaço, tab, quebras de linha etc.)
+Atribuição
+ASGN = ':''='
 --------------------------------------------------------------------
 */
-void skipspaces(FILE *tape)
-{
-	int head;
-	while ( isspace(head = tracked_getc(tape)) ){
-		if(head == '\n'){
-			lineno++;
-			colno = 0;
-			break;
-		}
-	}
-	tracked_ungetc(head, tape);
-}
-
 int isASGN(FILE *tape){
 	lexeme[0] = tracked_getc(tape);
 	if (lexeme[0] == ':') {
@@ -358,6 +345,25 @@ int isASGN(FILE *tape){
 
 /*
 --------------------------------------------------------------------
+Função auxiliar para ignorar espaços em branco
+(espaço, tab, quebras de linha etc.)
+--------------------------------------------------------------------
+*/
+void skipspaces(FILE *tape)
+{
+	int head;
+	while ( isspace(head = tracked_getc(tape)) ){
+		if(head == '\n'){
+			// lineno++;
+			// colno = 0;
+			break;
+		}
+	}
+	tracked_ungetc(head, tape);
+}
+
+/*
+--------------------------------------------------------------------
 Função principal de análise léxica (scanner)
 - Ignora espaços
 - Testa ordem: Identificadores, Hexadecimal, Octal, Números
@@ -371,15 +377,15 @@ int gettoken(FILE *source)
 	skipspaces(source);
 
 	if ( (token = isID(source)) ) return token;
-	// if ( (token = isHEX(source)) ) return token;
-	// if ( (token = isOCT(source)) ) return token;
+	if ( (token = isHEX(source)) ) return token;
+	if ( (token = isOCT(source)) ) return token;
 	if ( (token = isNUM(source)) ) return token;
 	if ( (token = isASGN(source)) ) return token;
 
 	lexeme[0] = token = tracked_getc(source);
 	lexeme[1] = 0;
 
-	// return an ASCII token
+	// Caso não seja nenhum TOKEN pré determinado retorn o código ASCII
 	return token;
 }
 
@@ -389,7 +395,25 @@ Função wrapper para contar as colunas
 --------------------------------------------------------------------
 */
 int tracked_getc(FILE *tape) {
-    int ch = getc(tape);
+	int ch = getc(tape);
+
+	// Filtrar sequências ANSI das setas (ESC [ A/B/C/D)
+    if (ch == 27) { // ESC'
+        int next1 = getc(tape);
+        if (next1 == '[') {
+            int next2 = getc(tape);
+            if (next2 == 'A' || next2 == 'B' || next2 == 'C' || next2 == 'D') {
+                // ignora completamente a sequência
+                return tracked_getc(tape);
+            } else {
+                ungetc(next2, tape);
+                ungetc(next1, tape);
+            }
+        } else {
+            ungetc(next1, tape);
+        }
+    }
+
     colno++;
     return ch;
 }
@@ -413,6 +437,7 @@ char* getEnumName(int value) {
         case FLT:  return "FLT";
         case EXIT: return "EXIT";
         case QUIT: return "QUIT";
+        case EOF: return "EOF";
         default:   return "";
     }
 }
