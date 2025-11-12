@@ -10,7 +10,6 @@
 int lookahead; // Token atual (lookahead) usado pelo parser
 
 // Interpretador de comando
-//
 // mybc -> cmd { cmdsep cmd } EOF
 // cmd -> E | exit | quit | <epsilon>
 // cmdsep -> ';' | '\n'
@@ -66,47 +65,68 @@ int sp = -1;
 #define MAXSTENTRIES 4096
 char symtab[MAXSTENTRIES][MAXIDLEN+1];
 int symtab_next_entry = 0; // uso: strcpy(symtab[symtab_next_entry], name);
+
 double vmem[MAXSTENTRIES];
 
-int address;
+int address; //armazena o endereço da variável na memória
+
+/*
+--------------------------------------------------------------------
+Vai localizar o endereço da variavel na memória
+--------------------------------------------------------------------
+*/
 double recall(const char *name) {
+
 	// Busca bottom-up a variável chamada name
-	// Começa de -1 pois symtab_next_entry sempre aponta pro próximo item vazio da tabela
+	// Começa de -1 pois symtab_next_entry sempre aponta para o próximo item vazio da tabela
 	for(address = symtab_next_entry-1; address > -1; address--) {
 		if(strcmp(symtab[address], name) == 0) {
 			return vmem[address];
 		}
 	}
-	// VAriável ainda não existe
+
+	// Variável ainda não existe
 	address = symtab_next_entry;
 	symtab_next_entry++;
 	strcpy(symtab[address], name);
-	return 0.e+00; // Só para enfatizar que é ponto flutuante
+
+	return 0.e+00; // Enfatiza que é ponto flutuante
 }
 
+/*
+--------------------------------------------------------------------
+Armazena no endereço associado ao ponteiro name
+--------------------------------------------------------------------
+*/
 void store(const char *name) {
-	recall(name); // Vai localizar o endereço da variavel na memória
+	recall(name); 
 	vmem[address] = acc;
 }
 
-// E é o símbolo inicial da gramática LL(1) de expressões simplificadas
-// Gramática:
-// E -> [Ominus] T { Oplus T }4: ainda no tratamento de erro no match, resolver o problema do exit para não quebrar a execução do ineterpretador de comando;
-// Oplus = ['+''-']
-// Ominus = ['+''-']
+
+/*
+--------------------------------------------------------------------
+E é o símbolo inicial da gramática LL(1) de expressões simplificadas
+E -> [Ominus] T { Oplus T }
+Oplus = ['+''-']
+Ominus = ['+''-']
+--------------------------------------------------------------------
+*/
 void E(void) { 
 
-	/*0*/char varname[MAXIDLEN+1]/**/;
+	/*0*/char varname[MAXIDLEN+1];
 	/*1*/int isNegate = 0; /**/		// Marca se deve aplicar negação
 	/*2*/int isOtimes = 0; /**/		// Armazena operador multiplicativo ('*' ou '/')
 	/*3*/int isOplus = 0; /**/		// Armazena operador aditivo ('+' ou '-')
 
 	// Trata opcional (+ ou -) antes do termo
 	if(lookahead == '+' || lookahead == '-'){
-		if (lookahead == '-') {
-			isNegate = lookahead; // Se for '-', guarda para aplicar negação depois
+
+		if (lookahead == '-') {// Se for '-', guarda para aplicar negação depois
+			isNegate = lookahead; 
 		}
-		match(lookahead); // Consome o operador
+
+		match(lookahead);
 	}
 
 	// Início do termo (T)
@@ -120,38 +140,41 @@ void E(void) {
 			match('('); E(); match(')');
 			break;
 		case DEC: // Número decimal
-			/*1*/acc = atoi(lexeme);/**/
+			/*1*/acc = atoi(lexeme);
 			match(DEC); 
 			break;
 		case OCT: // Número octal
-			/*2*/acc = strtol(lexeme, NULL, 8); /**/ 
+			/*2*/acc = strtol(lexeme, NULL, 8); 
 			match(OCT); 
 			break;
 		case HEX: // Número hexadecimal
-			/*3*/acc = strtol(lexeme, NULL, 16); /**/
+			/*3*/acc = strtol(lexeme, NULL, 16); 
 			match(HEX); 
 			break;
 		case FLT: // Número ponto flutuante
-			/*4*/acc = atof(lexeme);/**/
+			/*4*/acc = atof(lexeme);
 			match(FLT); 
 			break;
-		default: // Identificador (variável)
-			// F -> ID [ := E ]
-			/**/strcpy(varname, lexeme);/**/ // Tem que salvar antes do match senão perde o nome
+		default: // Identificador (variável) F -> ID [ := E ]
+
+			strcpy(varname, lexeme); // Para não perde o nome da variável
 			match(ID);
+			
+			//saber se é atribuição, caso não seja, traz o valor da variável para o acumulador direto
 			if(lookahead == ASGN) {
 				match(ASGN);
-				E(); // Traz o resultado no acumulador (acc)
-				/**/store(varname);/**/ // Armazena no endereço associado a varname
+				E(); 			// Traz o resultado no acumulador (acc)
+				store(varname); // Armazena no endereço associado a varname
 			} else {
-				/**/acc = recall(varname);/**/
+				acc = recall(varname);
 			}
 	}
 
 	// Término do fator
 
-	/**/
+
 	if(isOtimes){ // Se havia operador multiplicativo pendente
+
 		// fprintf(objcode, " %c ", isOtimes);
 		if(isOtimes == '*') {
 			stack[sp] = stack[sp] * acc;
@@ -162,28 +185,28 @@ void E(void) {
 
 		isOtimes = 0;
 	}
-	/**/
+	
 
 	// Se próximo token for '*' ou '/', continua reconhecendo fator
 	if (lookahead == '*' || lookahead == '/') {
-		/*10*/isOtimes = lookahead;/**/ // Guarda operador multiplicativo
-		/*10a*/stack[++sp] = acc;/**/
+		isOtimes = lookahead;// Guarda operador multiplicativo
+		stack[++sp] = acc;
 		match(lookahead); 
 		goto _Fbegin; // Volta para reconhecer novo fator
 	}
 
 	// Término do termo
 	
-	/**/
-	if (isNegate) { // Se havia sinal negativo, aplica
+	// Se havia sinal negativo, aplica
+	if (isNegate) { 
 		// fprintf(objcode, " negate ");
 		acc = -acc;
 		isNegate = 0;
 	}
-	/**/
 
-	/**/
-	if(isOplus) { // Se havia operador aditivo pendente
+
+	// Se havia operador aditivo pendente
+	if(isOplus) { 
 		// fprintf(objcode, " %c ", isOplus);
 		if(isOplus == '+') {
 			stack[sp] = stack[sp] + acc;
@@ -193,31 +216,34 @@ void E(void) {
 		acc = stack[sp]; sp--;
 		isOplus = 0;
 	}
-	/**/
 
 	// Se próximo token for '+' ou '-', continua reconhecendo termo
 	if (lookahead == '+' || lookahead == '-') {
-		/**/isOplus = lookahead; /**/ // Guarda operador aditivo
-		/*10a*/stack[++sp] = acc;/**/
+		isOplus = lookahead;	// Guarda operador aditivo
+		stack[++sp] = acc;
 		match(lookahead); 
-		goto _Tbegin; // Volta para reconhecer novo termo
+		goto _Tbegin; 	// Volta para reconhecer novo termo
 	}
-
 	// Término da expressão
 }
 
-
-//////////////////////////// parser components /////////////////////////////////
+/*
+--------------------------------------------------------------------
+Parser components 
+--------------------------------------------------------------------
+*/
 void match(int expected)
 {
 	if (lookahead == expected) {
 		// Se o token atual é o esperado, consome e avança para o próximo
 		lookahead = gettoken(source);
 	} else {
+
 		// Caso contrário, erro de análise
 		fprintf(stderr, "Token mismatch at line %d column %d. ", lineno, colno);
 
 		fprintf(stderr, "Expected ");
+		
 		
 		char *typename = getEnumName(expected); // Função retorna uma string com o nome do identificar caso esteja mapeado, caso contrário, retorna vazio
 		if (strcmp(typename, "") != 0) {
