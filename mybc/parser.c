@@ -5,7 +5,7 @@
 #include "tokens.h"
 #include "parser.h"
 
-// /**/ ação semantica /**/
+// ação semantica -> /**/ [...] /**/
 
 int lookahead; // Token atual (lookahead) usado pelo parser
 
@@ -18,6 +18,7 @@ void mybc(void){
 	cmd();
 
 	while (lookahead == ';' || lookahead == '\n') {
+		
 		// Controle de linhas para print de erro
 		if(lookahead == '\n')
 			lineno++;
@@ -140,39 +141,39 @@ void E(void) {
 			match('('); E(); match(')');
 			break;
 		case DEC: // Número decimal
-			/*1*/acc = atoi(lexeme);
+			/*1*/ acc = atoi(lexeme); /**/
 			match(DEC); 
 			break;
 		case OCT: // Número octal
-			/*2*/acc = strtol(lexeme, NULL, 8); 
+			/*2*/ acc = strtol(lexeme, NULL, 8); /**/
 			match(OCT); 
 			break;
 		case HEX: // Número hexadecimal
-			/*3*/acc = strtol(lexeme, NULL, 16); 
+			/*3*/ acc = strtol(lexeme, NULL, 16); /**/
 			match(HEX); 
 			break;
 		case FLT: // Número ponto flutuante
-			/*4*/acc = atof(lexeme);
+			/*4*/ acc = atof(lexeme); /**/
 			match(FLT); 
 			break;
 		default: // Identificador (variável) F -> ID [ := E ]
 
-			strcpy(varname, lexeme); // Para não perde o nome da variável
+			/**/ strcpy(varname, lexeme); /**/ // Para não perde o nome da variável
 			match(ID);
 			
 			//saber se é atribuição, caso não seja, traz o valor da variável para o acumulador direto
 			if(lookahead == ASGN) {
 				match(ASGN);
 				E(); 			// Traz o resultado no acumulador (acc)
-				store(varname); // Armazena no endereço associado a varname
+				/**/store(varname);/**/  // Armazena no endereço associado a varname
 			} else {
-				acc = recall(varname);
+				/**/acc = recall(varname);/**/
 			}
 	}
 
 	// Término do fator
 
-
+	/**/
 	if(isOtimes){ // Se havia operador multiplicativo pendente
 
 		// fprintf(objcode, " %c ", isOtimes);
@@ -185,12 +186,13 @@ void E(void) {
 
 		isOtimes = 0;
 	}
+	/**/
 	
 
 	// Se próximo token for '*' ou '/', continua reconhecendo fator
 	if (lookahead == '*' || lookahead == '/') {
-		isOtimes = lookahead;// Guarda operador multiplicativo
-		stack[++sp] = acc;
+		/*10*/isOtimes = lookahead;/**/ // Guarda operador multiplicativo
+		/*10a*/stack[++sp] = acc;/**/ 
 		match(lookahead); 
 		goto _Fbegin; // Volta para reconhecer novo fator
 	}
@@ -198,14 +200,17 @@ void E(void) {
 	// Término do termo
 	
 	// Se havia sinal negativo, aplica
+	/**/
 	if (isNegate) { 
 		// fprintf(objcode, " negate ");
 		acc = -acc;
 		isNegate = 0;
 	}
+	/**/
 
 
 	// Se havia operador aditivo pendente
+	/**/
 	if(isOplus) { 
 		// fprintf(objcode, " %c ", isOplus);
 		if(isOplus == '+') {
@@ -216,11 +221,12 @@ void E(void) {
 		acc = stack[sp]; sp--;
 		isOplus = 0;
 	}
+	/**/
 
 	// Se próximo token for '+' ou '-', continua reconhecendo termo
 	if (lookahead == '+' || lookahead == '-') {
-		isOplus = lookahead;	// Guarda operador aditivo
-		stack[++sp] = acc;
+		/**/isOplus = lookahead; /**/ // Guarda operador aditivo
+		/*10a*/stack[++sp] = acc;/**/
 		match(lookahead); 
 		goto _Tbegin; 	// Volta para reconhecer novo termo
 	}
