@@ -87,20 +87,18 @@ void cmd(void) {
 	}
 }
 
-double acc;
+double acc; // Acumulador da expressão
 #define STACKSIZE 1024
-double stack[STACKSIZE];
-int sp = -1;
+double stack[STACKSIZE]; // Pilha auxiliar
+int sp = -1; // Topo da pilha
 
 // Tabela de símbolos como dicionário dos valores armazenados na memória virtual
 #define MAXSTENTRIES 4096
-char symtab[MAXSTENTRIES][MAXIDLEN+1];
-int symtab_next_entry = 0; // uso: strcpy(symtab[symtab_next_entry], name);
+char symtab[MAXSTENTRIES][MAXIDLEN+1]; // Nomes das variáveis
+int symtab_next_entry = 0; // Próximo slot disponível
 
-double vmem[MAXSTENTRIES];
-
-int address; //armazena o endereço da variável na memória
-
+double vmem[MAXSTENTRIES]; // Valores das variáveis
+int address; // Armazena o endereço da variável na memória
 /*
 --------------------------------------------------------------------
 Função para localizar o endereço da variavel na memória
@@ -133,7 +131,6 @@ void store(const char *name) {
 	recall(name); 
 	vmem[address] = acc;
 }
-
 
 /*
 --------------------------------------------------------------------
@@ -205,20 +202,18 @@ void E(void) {
 
 	/*8*/
 	if(isOtimes){ // Se havia operador multiplicativo pendente
-
-		// fprintf(objcode, " %c ", isOtimes);
 		if(isOtimes == '*') {
 			stack[sp] = stack[sp] * acc;
 		} else {
 			stack[sp] = stack[sp] / acc;
 		}
-		acc = stack[sp]; sp--;
+		acc = stack[sp]; 
+		sp--;  // Desempilha
 
 		isOtimes = 0;
 	}
 	/**/
 	
-
 	// Se próximo token for '*' ou '/', continua reconhecendo fator
 	if (lookahead == '*' || lookahead == '/') {
 		/*9*/isOtimes = lookahead;/**/ // Guarda operador multiplicativo
@@ -237,7 +232,6 @@ void E(void) {
 	}
 	/**/
 
-
 	// Se havia operador aditivo pendente, aplica
 	/*12*/
 	if(isOplus) { 
@@ -246,7 +240,7 @@ void E(void) {
 		} else {
 			stack[sp] = stack[sp] - acc;
 		}
-		acc = stack[sp]; sp--;
+		acc = stack[sp]; sp--; // Desempilha
 		isOplus = 0;
 	}
 	/**/
