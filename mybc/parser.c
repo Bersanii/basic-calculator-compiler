@@ -25,9 +25,10 @@ void mybc(void) {
         if (lookahead == ';' || lookahead == '\n') {
             
             // Controle de linhas para print de erro
-            if(lookahead == '\n')
+            if(lookahead == '\n') {
                 lineno++;
-            colno = 0;
+				colno = 0;
+			}
             
             match(lookahead);
             
