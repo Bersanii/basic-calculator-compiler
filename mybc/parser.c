@@ -14,23 +14,56 @@ int lookahead; // Token atual (lookahead) usado pelo parser
 // cmd -> E | exit | quit | <epsilon>
 // cmdsep -> ';' | '\n'
 
-void mybc(void){
-	cmd();
+void mybc(void) {
 
-	while (lookahead == ';' || lookahead == '\n') {
-		
-		// Controle de linhas para print de erro
-		if(lookahead == '\n')
-			lineno++;
-		colno = 0;
-		
-		// cmdsep
-		match(lookahead);
-		
-		cmd();
-	}
+    // Loop principal (REPL). Continua rodando até o usuário enviar EOF (Ctrl+D).
+    while (lookahead != EOF) {
+        
+        // Tenta executar um comando
+        cmd();
 
-	match(EOF);
+        // Após um comando, esperamos um separador ou o fim da entrada
+        if (lookahead == ';' || lookahead == '\n') {
+            
+            // Controle de linhas para print de erro
+            if(lookahead == '\n')
+                lineno++;
+            colno = 0;
+            
+            // Consome o separador (';' or '\n') e prepara para o próximo loop
+            match(lookahead);
+            
+        } 
+        else if (lookahead == EOF) {
+            // Se for EOF, quebra o loop para terminar
+            break;
+        } 
+        else {
+            // ERRO: Temos "lixo" na entrada. 
+            // Ex: "2+2@" ou o seu caso, "k:9" (que foi visto como "k" e depois ":")
+            
+            // 1. Reportar o erro
+            fprintf(stderr, "Syntax error at line %d column %d: Unexpected token ", lineno, colno);
+            
+            char *typename_lookahead = getEnumName(lookahead); // Reusa a função do lexer
+            if (strcmp(typename_lookahead, "") != 0) {
+                fprintf(stderr, "%s", typename_lookahead);
+            } else {
+                fprintf(stderr, "'%c'", lookahead);
+            }
+            fprintf(stderr, "\n");
+
+            // 2. Modo de Recuperação (Panic Mode)
+            // Descarta todos os tokens até encontrar uma nova linha.
+            // Isso "limpa" a entrada e deixa o usuário digitar um novo comando.
+            while (lookahead != '\n' && lookahead != EOF) {
+                lookahead = gettoken(source);
+            }
+        }
+    }
+
+    // Quando o loop quebrar (só por EOF), nós consumimos o EOF
+    match(EOF);
 }
 
 void cmd(void) {
