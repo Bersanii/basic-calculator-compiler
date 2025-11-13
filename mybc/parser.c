@@ -9,10 +9,27 @@
 
 int lookahead; // Token atual (lookahead) usado pelo parser
 
-// Interpretador de comando
-// mybc -> cmd { cmdsep cmd } EOF
-// cmd -> E | exit | quit | <epsilon>
-// cmdsep -> ';' | '\n'
+double acc; // Acumulador da expressão
+#define STACKSIZE 1024
+double stack[STACKSIZE]; // Pilha auxiliar
+int sp = -1; // Topo da pilha
+
+// Tabela de símbolos como dicionário dos valores armazenados na memória virtual
+#define MAXSTENTRIES 4096
+char symtab[MAXSTENTRIES][MAXIDLEN+1]; // Nomes das variáveis
+int symtab_next_entry = 0; // Próximo slot disponível
+
+double vmem[MAXSTENTRIES]; // Valores das variáveis
+int address; // Armazena o endereço da variável na memória
+
+/*
+--------------------------------------------------------------------
+Interpretador de comando
+mybc -> cmd { cmdsep cmd } EOF
+cmd -> E | exit | quit | <epsilon>
+cmdsep -> ';' | '\n'
+--------------------------------------------------------------------
+*/
 void mybc(void) {
 
     // Loop principal. Continua rodando até o usuário enviar EOF (Ctrl+D).
@@ -63,6 +80,11 @@ void mybc(void) {
     match(EOF);
 }
 
+/*
+--------------------------------------------------------------------
+Dunção para tratar entradas de comandos e casos especiais
+--------------------------------------------------------------------
+*/
 void cmd(void) {
 	switch (lookahead) {
 		case EXIT:
@@ -87,18 +109,6 @@ void cmd(void) {
 	}
 }
 
-double acc; // Acumulador da expressão
-#define STACKSIZE 1024
-double stack[STACKSIZE]; // Pilha auxiliar
-int sp = -1; // Topo da pilha
-
-// Tabela de símbolos como dicionário dos valores armazenados na memória virtual
-#define MAXSTENTRIES 4096
-char symtab[MAXSTENTRIES][MAXIDLEN+1]; // Nomes das variáveis
-int symtab_next_entry = 0; // Próximo slot disponível
-
-double vmem[MAXSTENTRIES]; // Valores das variáveis
-int address; // Armazena o endereço da variável na memória
 /*
 --------------------------------------------------------------------
 Função para localizar o endereço da variavel na memória
