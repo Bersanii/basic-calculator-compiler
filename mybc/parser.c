@@ -41,7 +41,7 @@ void mybc(void) {
 			// como fim da expressão, ele tenta validar se tem um novo comando checando se o lookahead é ';' ou '/n', nesse caso é 9
 			// então o match(EOF) era disparado.
             
-            fprintf(stderr, "Syntax error at line %d column %d: Unexpected token ", lineno, colno);
+            fprintf(stderr, "Syntax error at line %d column %d. Unexpected token ", lineno, colno);
             
             char *typename_lookahead = getEnumName(lookahead);
             if (strcmp(typename_lookahead, "") != 0) {
