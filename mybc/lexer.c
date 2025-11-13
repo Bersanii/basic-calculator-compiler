@@ -392,6 +392,7 @@ int gettoken(FILE *source)
 /*
 --------------------------------------------------------------------
 Função wrapper para contar as colunas
+Filtra as setas do stdin caso presentes
 --------------------------------------------------------------------
 */
 int tracked_getc(FILE *tape) {

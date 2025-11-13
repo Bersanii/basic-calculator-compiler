@@ -13,10 +13,9 @@ int lookahead; // Token atual (lookahead) usado pelo parser
 // mybc -> cmd { cmdsep cmd } EOF
 // cmd -> E | exit | quit | <epsilon>
 // cmdsep -> ';' | '\n'
-
 void mybc(void) {
 
-    // Loop principal (REPL). Continua rodando até o usuário enviar EOF (Ctrl+D).
+    // Loop principal. Continua rodando até o usuário enviar EOF (Ctrl+D).
     while (lookahead != EOF) {
         
         // Tenta executar um comando
@@ -30,22 +29,21 @@ void mybc(void) {
                 lineno++;
             colno = 0;
             
-            // Consome o separador (';' or '\n') e prepara para o próximo loop
             match(lookahead);
             
-        } 
-        else if (lookahead == EOF) {
-            // Se for EOF, quebra o loop para terminar
+        } else if (lookahead == EOF) { // Se for EOF, quebra o loop para terminar
             break;
-        } 
-        else {
+        } else {
             // ERRO: Temos "lixo" na entrada. 
-            // Ex: "2+2@" ou o seu caso, "k:9" (que foi visto como "k" e depois ":")
+            // Ex: "k:9" (é analisado como "k" e depois ":") 
+			
+			// Explicação: Como não existe cenário previsto para derivação ID -> ID -> DEC o parser identifica ID -> ID
+			// como fim da expressão, ele tenta validar se tem um novo comando checando se o lookahead é ';' ou '/n', nesse caso é 9
+			// então o match(EOF) era disparado.
             
-            // 1. Reportar o erro
             fprintf(stderr, "Syntax error at line %d column %d: Unexpected token ", lineno, colno);
             
-            char *typename_lookahead = getEnumName(lookahead); // Reusa a função do lexer
+            char *typename_lookahead = getEnumName(lookahead);
             if (strcmp(typename_lookahead, "") != 0) {
                 fprintf(stderr, "%s", typename_lookahead);
             } else {
@@ -53,16 +51,14 @@ void mybc(void) {
             }
             fprintf(stderr, "\n");
 
-            // 2. Modo de Recuperação (Panic Mode)
-            // Descarta todos os tokens até encontrar uma nova linha.
-            // Isso "limpa" a entrada e deixa o usuário digitar um novo comando.
+            // Descarta todos os tokens até encontrar uma nova linha, "limpa" a entrada e deixa o usuário digitar um novo comando.
             while (lookahead != '\n' && lookahead != EOF) {
                 lookahead = gettoken(source);
             }
         }
     }
 
-    // Quando o loop quebrar (só por EOF), nós consumimos o EOF
+    // Quando o loop quebrar consome o EOF
     match(EOF);
 }
 
@@ -106,7 +102,7 @@ int address; //armazena o endereço da variável na memória
 
 /*
 --------------------------------------------------------------------
-Vai localizar o endereço da variavel na memória
+Função para localizar o endereço da variavel na memória
 --------------------------------------------------------------------
 */
 double recall(const char *name) {
@@ -129,7 +125,7 @@ double recall(const char *name) {
 
 /*
 --------------------------------------------------------------------
-Armazena no endereço associado ao ponteiro name
+Função para armazena no endereço associado ao ponteiro name
 --------------------------------------------------------------------
 */
 void store(const char *name) {
@@ -148,10 +144,10 @@ Ominus = ['+''-']
 */
 void E(void) { 
 
-	/*0*/char varname[MAXIDLEN+1];
-	/*1*/int isNegate = 0; /**/		// Marca se deve aplicar negação
-	/*2*/int isOtimes = 0; /**/		// Armazena operador multiplicativo ('*' ou '/')
-	/*3*/int isOplus = 0; /**/		// Armazena operador aditivo ('+' ou '-')
+	/*0*/char varname[MAXIDLEN+1];/**/	
+	/*1*/int isNegate = 0;/**/		// Marca se deve aplicar negação
+	/*2*/int isOtimes = 0;/**/		// Armazena operador multiplicativo ('*' ou '/')
+	/*3*/int isOplus = 0;/**/		// Armazena operador aditivo ('+' ou '-')
 
 	// Trata opcional (+ ou -) antes do termo
 	if(lookahead == '+' || lookahead == '-'){
@@ -191,22 +187,22 @@ void E(void) {
 			break;
 		default: // Identificador (variável) F -> ID [ := E ]
 
-			/**/ strcpy(varname, lexeme); /**/ // Para não perde o nome da variável
+			/*5*/ strcpy(varname, lexeme); /**/ // Para não perde o nome da variável
 			match(ID);
 			
 			//saber se é atribuição, caso não seja, traz o valor da variável para o acumulador direto
 			if(lookahead == ASGN) {
 				match(ASGN);
 				E(); 			// Traz o resultado no acumulador (acc)
-				/**/store(varname);/**/  // Armazena no endereço associado a varname
+				/*6*/store(varname);/**/  // Armazena no endereço associado a varname
 			} else {
-				/**/acc = recall(varname);/**/
+				/*7*/acc = recall(varname);/**/
 			}
 	}
 
 	// Término do fator
 
-	/**/
+	/*8*/
 	if(isOtimes){ // Se havia operador multiplicativo pendente
 
 		// fprintf(objcode, " %c ", isOtimes);
@@ -224,8 +220,8 @@ void E(void) {
 
 	// Se próximo token for '*' ou '/', continua reconhecendo fator
 	if (lookahead == '*' || lookahead == '/') {
-		/*10*/isOtimes = lookahead;/**/ // Guarda operador multiplicativo
-		/*10a*/stack[++sp] = acc;/**/ 
+		/*9*/isOtimes = lookahead;/**/ // Guarda operador multiplicativo
+		/*10*/stack[++sp] = acc;/**/ 
 		match(lookahead); 
 		goto _Fbegin; // Volta para reconhecer novo fator
 	}
@@ -233,19 +229,17 @@ void E(void) {
 	// Término do termo
 	
 	// Se havia sinal negativo, aplica
-	/**/
-	if (isNegate) { 
-		// fprintf(objcode, " negate ");
+	/*11*/
+	if (isNegate) {
 		acc = -acc;
 		isNegate = 0;
 	}
 	/**/
 
 
-	// Se havia operador aditivo pendente
-	/**/
+	// Se havia operador aditivo pendente, aplica
+	/*12*/
 	if(isOplus) { 
-		// fprintf(objcode, " %c ", isOplus);
 		if(isOplus == '+') {
 			stack[sp] = stack[sp] + acc;
 		} else {
@@ -258,8 +252,8 @@ void E(void) {
 
 	// Se próximo token for '+' ou '-', continua reconhecendo termo
 	if (lookahead == '+' || lookahead == '-') {
-		/**/isOplus = lookahead; /**/ // Guarda operador aditivo
-		/*10a*/stack[++sp] = acc;/**/
+		/*13*/isOplus = lookahead; /**/ // Guarda operador aditivo
+		/*14*/stack[++sp] = acc;/**/
 		match(lookahead); 
 		goto _Tbegin; 	// Volta para reconhecer novo termo
 	}
@@ -268,7 +262,9 @@ void E(void) {
 
 /*
 --------------------------------------------------------------------
-Parser components 
+Função de validação de token
+Recebe o token esperado e o compara com o lookahead, se forem iguais
+recupera o próximo token, caso contrário, mostra um erro.
 --------------------------------------------------------------------
 */
 void match(int expected)
